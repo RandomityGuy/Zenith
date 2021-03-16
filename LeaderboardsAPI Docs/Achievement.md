@@ -33,3 +33,24 @@ JSON Response if success:
     "categoryNames": string[], // The name of the categories
 }
 ```
+
+### POST https://marbleblast.com/pq/leader/api/Achievement/RecordAchievement.php
+
+Records an achievement get
+
+Query String Parameters:
+| FIELD | TYPE | DESCRIPTION | REQUIRED | DEFAULT|
+|-------|------|-------------|----------|--------|
+| username | str | The username of the person | Yes | None |
+| key | str | The $LB::ChatKey | Yes | None |
+| achievement | int | The achievement id | Yes | None |
+
+Response
+| STATUS CODE | RESPONSE |
+|-------------|----------|
+| 200 | Custom format |
+
+Response Format:  
+`NOACH` // No achievement exists  
+`AUTOMATIC` // Achievement not awarded manually  
+`GRANTED` // Achievement granted  

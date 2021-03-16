@@ -336,9 +336,9 @@ Query String Parameters:
 |-------|------|-------------|----------|--------|
 | username | str | The username of the person | Yes | None |
 | key | str | The $LB::ChatKey | Yes | None |
-| screenResolution | str | The current screen resolution | No | null |
-| windowResolution | str | The game window resolution | No | null |
-| supportedResolutions[] | str | This parameter can be repeated, give it differnt resolutions each time | No | null |
+| screenResolution | str | The current screen resolution | No | None |
+| windowResolution | str | The game window resolution | No | None |
+| supportedResolutions[] | str | This parameter can be repeated, give it differnt resolutions each time | No | None |
 
 Response
 | STATUS CODE | RESPONSE |

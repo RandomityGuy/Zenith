@@ -9,4 +9,4 @@ Query String Parameters:
 |-------|------|-------------|----------|--------|
 | username | str | The username of the person | Yes | None |
 | key | str | The $LB::ChatKey | Yes | None |
-| metric-key | str | metric-value. This can be repeated with different metric-keys | No | null |
+| metric-key | str | metric-value. This can be repeated with different metric-keys | No | None |

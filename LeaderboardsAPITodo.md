@@ -11,8 +11,7 @@
 ~~./Egg/GetEasterEggs.php~~  
 
 ## Achievement
-./Achievement/UpdateAchievements.php  
-./Achievement/RecordAchievement.php  
+~~./Achievement/RecordAchievement.php~~  
 ~~./Achievement/GetAchievementList.php~~  
 
 ## Chat
@@ -36,14 +35,13 @@
 ~~./Score/GetGlobalScores.php~~  
 
 ## Replay
-./Replay/GetReplay.php  
-./Replay/RecordReplay.php  
+~~./Replay/GetReplay.php~~  
+~~./Replay/RecordReplay.php~~  
 
 ## Event
 ~~./Event/RecordEventTrigger.php~~  
 
 ## Multiplayer
-./Multiplayer/GetPlayerRating.php  
 ./Multiplayer/RecordMatch.php  
 ~~./Multiplayer/VerifyPlayer.php~~  
 

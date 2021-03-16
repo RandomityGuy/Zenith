@@ -1,47 +1,42 @@
-## Egg
+## Replay
 
-### GET/POST https://marbleblast.com/pq/leader/api/Egg/GetEasterEggs.php
+### GET https://marbleblast.com/pq/leader/api/Replay/GetReplay.php
 
-Gets the easter egg data
+Downloads a replay for a mission
 
 Query String Parameters:
 | FIELD | TYPE | DESCRIPTION | REQUIRED | DEFAULT|
 |-------|------|-------------|----------|--------|
+| missionId | int | The mission_id | Yes | None |
 | username | str | The username of the person | Yes | None |
 | key | str | The $LB::ChatKey | Yes | None |
+| type | str | The type of the replay: "Replay" or "Egg" | No | Replay |
 
 Response
 | STATUS CODE | RESPONSE |
 |-------------|----------|
 | 200 | JSON |
 
-JSON Response if success:
 ```
 {
-    Dictionary:= id: int => time: int
-    // id: the mission id
-    // time: the easter egg time
+    "contents": str[] // Base64 encoded replay file 
 }
 ```
 
-Response if failure:
-```
-FAILURE NEEDLOGIN
-```
+### POST https://marbleblast.com/pq/leader/api/Replay/RecordReplay.php
 
-### POST https://marbleblast.com/pq/leader/api/Egg/RecordEgg.php
-
-Records an egg collection
+Uploads replay for a mission
 
 Query String Parameters:
 | FIELD | TYPE | DESCRIPTION | REQUIRED | DEFAULT|
 |-------|------|-------------|----------|--------|
+| missionId | int | The mission_id | Yes | None |
 | username | str | The username of the person | Yes | None |
 | key | str | The $LB::ChatKey | Yes | None |
-| missionId | int | The mission id on which you got the egg | Yes | None |
-| time | float | The egg collection time | Yes | None |
+| type | str | The type of the replay: "Replay" or "Egg" | No | Replay |
+| conts | str | base64 encoded replay data | Yes | None |
 
 Response
 | STATUS CODE | RESPONSE |
 |-------------|----------|
-| 200 | SUCCESS or FAILURE or ALREADY or RECORDING |
+| 200 | SUCCESS or RETRY |

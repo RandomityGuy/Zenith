@@ -46,6 +46,11 @@ Query String Parameters:
 | key | str | The $LB::ChatKey | Yes | None |
 | modifiers | int | The modifiers bitfield for which scores with the same modifiers have to be returned | No | None |
 
+Response
+| STATUS CODE | RESPONSE |
+|-------------|----------|
+| 200 | JSON |
+
 JSON Response if success:
 ```
 {
@@ -253,3 +258,5 @@ pq \<req\> RATING \<rating\> // The rating given by the mission.
 pq \<req\> NEWRATING \<rating\> // The new overall rating
 pq \<req\> POSITION \<rating\> // The rank on the mission
 pq \<req\> DELTA \<rating\> // The difference in your top rating with the rating above.  
+pq \<req\> RECORDING // Is only present when the score is a WR, triggers RREC upload
+pq \<req\> ACHIEVEMENT \<achievement-id\> // Is only present when the score grants an achievement
