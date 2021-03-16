@@ -58,3 +58,20 @@ JSON Response if success:
     ]
 }
 ```
+
+### POST https://marbleblast.com /pq/leader/api/Mission/RateMission.php
+
+Rates a multiplayer mission
+
+Query String Parameters:
+| FIELD | TYPE | DESCRIPTION | REQUIRED | DEFAULT|
+|-------|------|-------------|----------|--------|
+| username | str | The username of the person | Yes | None |
+| key | str | The $LB::ChatKey | Yes | None |
+| missionId | int | The mission id to rate | Yes | None |
+| rating | int | The rating: can be -1, 0, 1 | Yes | None |
+
+Response
+| STATUS CODE | RESPONSE |
+|-------------|----------|
+| 200 | SUCCESS or FAILURE |

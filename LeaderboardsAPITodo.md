@@ -2,13 +2,12 @@
 ~~./Metrics/RecordGraphicsMetrics.php~~  
 
 ## Marble
-./Marble/DownloadMarble.php  
 ~~./Marble/GetCurrentMarble.php~~  
 ~~./Marble/GetMarbleList.php~~  
-./Marble/RecordMarbleSelection.php  
+~~./Marble/RecordMarbleSelection.php~~  
 
 ## Egg:
-./Egg/RecordEgg.php  
+~~./Egg/RecordEgg.php~~  
 ~~./Egg/GetEasterEggs.php~~  
 
 ## Achievement
@@ -20,33 +19,33 @@
 ~~./Chat/GetFlairBitmap.php~~  
 
 ## Server
-./Server/CheckPortOpen.php  
+~~./Server/CheckPortOpen.php~~  
 ~~./Server/GetServerStatus.php~~  
 ~~./Server/GetServerVersion.php~~  
 
 ## Mission
-./Mission/RateMission.php  
+~~./Mission/RateMission.php~~  
 ~~./Mission/GetMissionList.php~~  
 
 ## Score
 ~~./Score/GetPersonalTopScores.php~~  
 ~~./Score/GetPersonalTopScoreList.php~~  
 ~~./Score/GetGlobalTopScores.php~~  
-./Score/RecordScore.php  
+~~./Score/RecordScore.php~~  
 ~~./Score/GetTopScoreModes.php~~  
-./Score/GetGlobalScores.php  
+~~./Score/GetGlobalScores.php~~  
 
 ## Replay
 ./Replay/GetReplay.php  
 ./Replay/RecordReplay.php  
 
 ## Event
-./Event/RecordEventTrigger.php  
+~~./Event/RecordEventTrigger.php~~  
 
 ## Multiplayer
 ./Multiplayer/GetPlayerRating.php  
 ./Multiplayer/RecordMatch.php  
-./Multiplayer/VerifyPlayer.php  
+~~./Multiplayer/VerifyPlayer.php~~  
 
 ## Player
 ~~./Player/RecordMetrics.php~~  
@@ -55,5 +54,5 @@
 ~~./Player/CheckLogin.php~~  
 ~~./Player/GetTopPlayers.php~~  
 ~~./Player/GetPlayerAchievements.php~~  
-./Player/RegisterUser.php  
+~~./Player/RegisterUser.php~~  
 ~~./Player/GetPlayerProfileInfo.php~~  
