@@ -46,3 +46,19 @@ Response
 | STATUS CODE | RESPONSE |
 |-------------|----------|
 | 200 | \<category-id: int\> \<marble-id: int\>|
+
+### POST https://marbleblast.com/pq/leader/api/Marble/RecordMarbleSelection.php
+
+Saves the marble selection to the server
+
+Query String Parameters:
+| FIELD | TYPE | DESCRIPTION | REQUIRED | DEFAULT|
+|-------|------|-------------|----------|--------|
+| username | str | The username of the person | Yes | None |
+| key | str | The $LB::ChatKey | Yes | None |  
+| marbleId | int | The marble id | Yes | None |  
+
+Response
+| STATUS CODE | RESPONSE |
+|-------------|----------|
+| 200 | SUCCESS or FAILURE |

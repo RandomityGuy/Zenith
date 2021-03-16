@@ -43,3 +43,17 @@ JSON Response:
     "players": int // Number of online players
 }
 ```
+
+### GET https://marbleblast.com /pq/leader/api/Server/CheckPortOpen.php
+
+Checks if the user's local port is open
+
+Query String Parameters:
+| FIELD | TYPE | DESCRIPTION | REQUIRED | DEFAULT|
+|-------|------|-------------|----------|--------|
+| port | int | The port to check | Yes | None |
+
+Response
+| STATUS CODE | RESPONSE |
+|-------------|----------|
+| 200 | "PORT SUCCESS" or "PORT FAILURE" |

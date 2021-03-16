@@ -66,6 +66,39 @@ FLAIR flair-id // Defines a flair, flair-id is a string
 LOGGED // Undocumented
 ```
 
+### POST https://marbleblast.com/pq/leader/api/Player/RegisterUser.php
+
+Registers a user
+
+Query String Parameters:
+| FIELD | TYPE | DESCRIPTION | REQUIRED | DEFAULT|
+|-------|------|-------------|----------|--------|
+| username | str | The username | Yes | None |
+| password | str | The plaintext password | Yes | None |
+| email | str | The email | Yes | None |
+
+Response
+| STATUS CODE | RESPONSE |
+|-------------|----------|
+| 200 | JSON |
+
+JSON Response if success (not properly documented)
+```
+{
+    "result": "true"
+}
+```
+
+JSON Response if failure 
+```
+{
+    "result": "false"
+    "error": str, // The error code
+}
+```
+
+
+
 ### GET/POST https://marbleblast.com/pq/leader/api/Player/GetPlayerAchievements.php
 
 Gets the achievement list for a given player
