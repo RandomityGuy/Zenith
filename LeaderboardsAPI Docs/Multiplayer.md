@@ -27,7 +27,7 @@ JSON Response:
 }
 ```
 
-### POST https://marbleblast.com /pq/leader/api/Multiplayer/RecordMatch.php
+### POST https://marbleblast.com/pq/leader/api/Multiplayer/RecordMatch.php
 
 Records a multiplayer match played.
 

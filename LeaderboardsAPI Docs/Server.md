@@ -44,7 +44,7 @@ JSON Response:
 }
 ```
 
-### GET https://marbleblast.com /pq/leader/api/Server/CheckPortOpen.php
+### GET https://marbleblast.com/pq/leader/api/Server/CheckPortOpen.php
 
 Checks if the user's local port is open
 

@@ -59,7 +59,7 @@ JSON Response if success:
 }
 ```
 
-### POST https://marbleblast.com /pq/leader/api/Mission/RateMission.php
+### POST https://marbleblast.com/pq/leader/api/Mission/RateMission.php
 
 Rates a multiplayer mission
 
