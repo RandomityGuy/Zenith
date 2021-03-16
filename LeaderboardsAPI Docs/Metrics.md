@@ -10,3 +10,8 @@ Query String Parameters:
 | username | str | The username of the person | Yes | None |
 | key | str | The $LB::ChatKey | Yes | None |
 | metric-key | str | metric-value. This can be repeated with different metric-keys | No | None |
+
+Response
+| STATUS CODE | RESPONSE |
+|-------------|----------|
+| 200 | SUCCESS or FAILURE |

@@ -13,7 +13,7 @@ Query String Parameters:
 Response
 | STATUS CODE | RESPONSE |
 |-------------|----------|
-| 200 | JSON |
+| 200 | JSON or ARGUMENT \<parameter\> if error |
 
 JSON Response if success:
 ```
@@ -41,7 +41,15 @@ Gets the personal top scores for a mission.
 Query String Parameters:
 | FIELD | TYPE | DESCRIPTION | REQUIRED | DEFAULT|
 |-------|------|-------------|----------|--------|
-| missionId | int | The mission_id | Yes | None |
+if custom mission:
+| missionFile | str | The mission filename | Yes | None |
+| missionName | str | The mission name | Yes | None |
+| missionHash | str | The mission hash | Yes | None |
+| missionGamemode | str | The mission gamemode | Yes | None |
+| difficultyId | str | The difficulty id of the mission | Yes | None |
+else:
+| missionId | int | The mission id | Yes | None |
+endif
 | username | str | The username of the person | Yes | None |
 | key | str | The $LB::ChatKey | Yes | None |
 | modifiers | int | The modifiers bitfield for which scores with the same modifiers have to be returned | No | None |
@@ -49,7 +57,7 @@ Query String Parameters:
 Response
 | STATUS CODE | RESPONSE |
 |-------------|----------|
-| 200 | JSON |
+| 200 | JSON or ARGUMENT \<parameter\> if error |
 
 JSON Response if success:
 ```
@@ -97,13 +105,21 @@ Gets the global top scores for a mission
 Query String Parameters:
 | FIELD | TYPE | DESCRIPTION | REQUIRED | DEFAULT|
 |-------|------|-------------|----------|--------|
-| missionId | int | The mission_id | Yes | None |
+if custom mission:
+| missionFile | str | The mission filename | Yes | None |
+| missionName | str | The mission name | Yes | None |
+| missionHash | str | The mission hash | Yes | None |
+| missionGamemode | str | The mission gamemode | Yes | None |
+| difficultyId | str | The difficulty id of the mission | Yes | None |
+else:
+| missionId | int | The mission id | Yes | None |
+endif
 | modifiers | int | The modifiers bitfield for which scores with the same modifiers have to be returned | No | None |
 
 Response
 | STATUS CODE | RESPONSE |
 |-------------|----------|
-| 200 | JSON |
+| 200 | JSON or ARGUMENT \<parameter\> if error |
 
 JSON Response if success:
 ```
@@ -149,13 +165,21 @@ Gets the global top scores for a mission, same thing as above.
 Query String Parameters:
 | FIELD | TYPE | DESCRIPTION | REQUIRED | DEFAULT|
 |-------|------|-------------|----------|--------|
-| missionId | int | The mission_id | Yes | None |
+if custom mission:
+| missionFile | str | The mission filename | Yes | None |
+| missionName | str | The mission name | Yes | None |
+| missionHash | str | The mission hash | Yes | None |
+| missionGamemode | str | The mission gamemode | Yes | None |
+| difficultyId | str | The difficulty id of the mission | Yes | None |
+else:
+| missionId | int | The mission id | Yes | None |
+endif
 | modifiers | int | The modifiers bitfield for which scores with the same modifiers have to be returned | No | None |
 
 Response
 | STATUS CODE | RESPONSE |
 |-------------|----------|
-| 200 | JSON |
+| 200 | JSON or ARGUMENT \<parameter\> if error |
 
 JSON Response if success:
 ```
@@ -201,12 +225,20 @@ Gets the available score modes for a mission
 Query String Parameters:
 | FIELD | TYPE | DESCRIPTION | REQUIRED | DEFAULT|
 |-------|------|-------------|----------|--------|
-| missionId | int | The mission_id | Yes | None |
+if custom mission:
+| missionFile | str | The mission filename | Yes | None |
+| missionName | str | The mission name | Yes | None |
+| missionHash | str | The mission hash | Yes | None |
+| missionGamemode | str | The mission gamemode | Yes | None |
+| difficultyId | str | The difficulty id of the mission | Yes | None |
+else:
+| missionId | int | The mission id | Yes | None |
+endif
 
 Response
 | STATUS CODE | RESPONSE |
 |-------------|----------|
-| 200 | JSON |
+| 200 | JSON or ARGUMENT \<parameter\> if error |
 
 JSON Response if success:
 ```
@@ -235,7 +267,15 @@ Sends the score to the leaderboards
 Query String Parameters:
 | FIELD | TYPE | DESCRIPTION | REQUIRED | DEFAULT|
 |-------|------|-------------|----------|--------|
-| missionId | int | The mission_id | Yes | None |
+if custom mission:
+| missionFile | str | The mission filename | Yes | None |
+| missionName | str | The mission name | Yes | None |
+| missionHash | str | The mission hash | Yes | None |
+| missionGamemode | str | The mission gamemode | Yes | None |
+| difficultyId | str | The difficulty id of the mission | Yes | None |
+else:
+| missionId | int | The mission id | Yes | None |
+endif
 | username | str | The username of the person | Yes | None |
 | key | str | The $LB::ChatKey | Yes | None |
 | modifiers | int | The modifiers bitfield for the score | No | None |
@@ -254,6 +294,7 @@ Response
 | 200 | CUSTOM FORMAT |
 
 Response Format:  
+pq \<req\> SUCCES or FAILURE \<rating\> // Whether the score was successfully recorded or not 
 pq \<req\> RATING \<rating\> // The rating given by the mission.  
 pq \<req\> NEWRATING \<rating\> // The new overall rating
 pq \<req\> POSITION \<rating\> // The rank on the mission

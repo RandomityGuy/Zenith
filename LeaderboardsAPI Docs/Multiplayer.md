@@ -36,7 +36,15 @@ Query String Parameters:
 |-------|------|-------------|----------|--------|
 | username | str | The username of the person | Yes | None |
 | key | str | The $LB::ChatKey | Yes | None |
+if custom mission:
+| missionFile | str | The mission filename | Yes | None |
+| missionName | str | The mission name | Yes | None |
+| missionHash | str | The mission hash | Yes | None |
+| missionGamemode | str | The mission gamemode | Yes | None |
+| difficultyId | str | The difficulty id of the mission | Yes | None |
+else:
 | missionId | int | The mission id on which the match was played | Yes | None |
+endif
 | players | int | The player count of the match | Yes | None |
 | port | int | The port of the server on which the match was held | Yes | None |
 | scoreType | str | The type of score: "score" or "time" | Yes | None |

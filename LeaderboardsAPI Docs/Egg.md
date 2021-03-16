@@ -38,7 +38,15 @@ Query String Parameters:
 |-------|------|-------------|----------|--------|
 | username | str | The username of the person | Yes | None |
 | key | str | The $LB::ChatKey | Yes | None |
+if custom mission:
+| missionFile | str | The mission filename | Yes | None |
+| missionName | str | The mission name | Yes | None |
+| missionHash | str | The mission hash | Yes | None |
+| missionGamemode | str | The mission gamemode | Yes | None |
+| difficultyId | str | The difficulty id of the mission | Yes | None |
+else:
 | missionId | int | The mission id on which you got the egg | Yes | None |
+endif
 | time | float | The egg collection time | Yes | None |
 
 Response

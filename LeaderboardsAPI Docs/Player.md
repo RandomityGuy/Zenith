@@ -33,19 +33,30 @@ JSON Response if fail:
 ```
 {
     "success": bool = false, // Whether success or not
-    "reason": string, // The reason
+    "reason": "username" | "password" | "version" | "activate" | "banned", // The reason
+    "ban_reason": str? // Optional, the ban reason
+    // Reasons:
+    // "username": invalid username
+    // "password": invalid password
+    // "version": outdated version
+    // "activate": activate your account
+    // "banned": banned
 }
 ```
 
 Settings Custom Format
 ```
 INFO
+    LOGGING // Dummy
     ACCESS int // The access level
     DISPLAY string // The display name of the user
+    CURRATING int // The total player rating
     SERVERTIME int // The timestamp
     WELCOME string // The webchat welcome text
-    DEFAULT Nardo-SPC-Polo // Undocumented
+    DEFAULT Nardo-SPC-Polo // The default score name
     ADDRESS ip // The ip address of the user
+    USERNAME string // The username
+    CANCHAT int // Whether webchat is enabled
     HELP
         INFO string // The command help
         CMDLIST string // The /help cmdlist result
@@ -58,11 +69,14 @@ FRIEND
 
 BLOCK
     START // Beging block list
+    NAME username displayname // Blocked user info
     DONT // End block list
 
 STATUS id status-text? // Maps status id to status-text, status-text can be omitted
 COLOR id hex // Maps color id to hex, hex in lowercase
 FLAIR flair-id // Defines a flair, flair-id is a string
+WINTER // Present if winterfest
+2SPOOKY // Present if frightfest
 LOGGED // Undocumented
 ```
 
@@ -82,18 +96,12 @@ Response
 |-------------|----------|
 | 200 | JSON |
 
-JSON Response if success (not properly documented)
-```
-{
-    "result": "true"
-}
-```
 
-JSON Response if failure 
+JSON Response
 ```
 {
-    "result": "false"
-    "error": str, // The error code
+    "result": "false" | "useractivate" | "adminactivate" | "success" // useractivate: email sent to activate account, adminactivate: admin needs to manually activate account
+    "error": str?, // Optional, the error code
 }
 ```
 
@@ -343,4 +351,4 @@ Query String Parameters:
 Response
 | STATUS CODE | RESPONSE |
 |-------------|----------|
-| 200 | SUCCESS |
+| 200 | SUCCESS or FAILURE |
