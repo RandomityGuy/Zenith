@@ -1,5 +1,6 @@
 import * as http from 'http';
 import * as url from 'url';
+import { Marble } from './marble';
 
 // A class that stores the response data that is to be sent back
 class WebResponse {
@@ -66,6 +67,18 @@ export class LBServer {
         else if (resp instanceof Object) return new WebResponse(JSON.stringify(resp), code, 'application/json');
         else return new WebResponse("Not Found", 404, 'text/plain');
     }
+
+    // Makes the response valid for pq to read
+    tryPQify(resp: WebResponse, params: http.IncomingMessage) {
+        let urlObject = new url.URL(params.url, 'http://localhost/');
+        if (urlObject.searchParams.has("req")) {
+            let reqid = urlObject.searchParams.get("req");
+            resp.response = `pq ${reqid} ${resp.response}`;
+            resp.headers.set("Content-Type", "text/plain");
+            return resp;
+        };
+        return resp;
+    }
     
     // Starts the server
     start() {
@@ -102,8 +115,16 @@ export class LBServer {
         }).listen(this.port);
     }
 
+    @route("/api/Marble/GetMarbleList.php", ["GET", "POST"])
+    getMarbleList(req: http.IncomingMessage) {
+        let obj = Marble.getMarbleList();
+        let resp = this.response(obj);
+        return this.tryPQify(resp, req);
+    }
+
     @route("/")
     test(req: http.IncomingMessage) {
+        Marble.getMarbleList();
         let obj = {
             jobject: [{
                 property: "Key",
@@ -114,7 +135,6 @@ export class LBServer {
             jobj2: "Test"
         };
         let resp = this.response(obj);
-        resp.headers.set("TestHeader", "Value");
         return resp;
     }
 
