@@ -1,6 +1,8 @@
 import * as http from 'http';
 import * as url from 'url';
+import { initDatabase } from './database';
 import { Marble } from './marble';
+import { Player } from './player';
 
 // A class that stores the response data that is to be sent back
 class WebResponse {
@@ -82,6 +84,7 @@ export class LBServer {
     
     // Starts the server
     start() {
+        initDatabase();
         http.createServer((req, res) => {
             let urlObject = new url.URL(req.url, 'http://localhost/');
             console.log(urlObject);
@@ -118,6 +121,21 @@ export class LBServer {
     @route("/api/Marble/GetMarbleList.php", ["GET", "POST"])
     getMarbleList(req: http.IncomingMessage) {
         let obj = Marble.getMarbleList();
+        let resp = this.response(obj);
+        return this.tryPQify(resp, req);
+    }
+
+    @route("/api/Player/RegisterUser.php", ["GET", "POST"])
+    registerUser(req: http.IncomingMessage) {
+        let urlObject = new url.URL(req.url, 'http://localhost/');
+        if (!urlObject.searchParams.has("username"))
+            return this.tryPQify(this.response("ARGUMENT username"), req);
+        if (!urlObject.searchParams.has("password"))
+            return this.tryPQify(this.response("ARGUMENT password"), req);
+        if (!urlObject.searchParams.has("email"))
+            return this.tryPQify(this.response("ARGUMENT email"), req);
+        
+        let obj = Player.registerUser(urlObject.searchParams.get("email"), urlObject.searchParams.get("username"), urlObject.searchParams.get("password"));
         let resp = this.response(obj);
         return this.tryPQify(resp, req);
     }
