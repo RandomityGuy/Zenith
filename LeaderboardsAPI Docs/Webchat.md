@@ -117,7 +117,9 @@ The following are the valid values for data:
 ```ADDRESS <ip: str>```: The ip address.  
 ```HELP [INFO | CMDLIST] <str>```: The help info/cmdlist output.  
 ```USERNAME <name: str>```: The username of the user.  
-```CANCHAT <chat: bool>```: Enables/disables chat.
+```CANCHAT <chat: bool>```: Enables/disables chat.  
+```PRIVELEGE <access: int>```: The access level.  
+```SERVERTIME <time: int>```: The server time.  
 
 ### LOGGED 
 Returned when successfully login happens.
@@ -156,7 +158,8 @@ Sets the game theme to frightfest.
 ### USER <data>
 The following are valid values for data:  
 ```START```: Marks the start of user data.  
-```INFO <username:str > <access: int> <location: int> <display: str> <color: hex> <flair: str> <prefix: str> <suffix: str>```: The user data.  
+```GROUP <access: int> <sort-order: int> <name-1: string> <name-2: string>```: Defines an access level group.
+```INFO <username:str > <access: int> <location (the status): int> <display: str> <color: hex> <flair: str> <prefix: str> <suffix: str>```: The user data.  
 ```DONE```: Marks the end of user data.  
 
 ### CHAT <username: str> <displayname: str> <destination: str> <access: int> <message: str>
