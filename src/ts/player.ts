@@ -1,6 +1,8 @@
 import Database from "better-sqlite3";
 import { db } from "./database";
 import * as bcrypt from "bcrypt";
+import { WebchatInfo, WebchatResponse } from "./webchat";
+import { Settings } from "./settings";
 
 export class Player {
 
@@ -45,8 +47,106 @@ export class Player {
 		};
 	}
 
-	static checkLogin() {
+	static checkLoginQuery: Database.Statement;
+	static checkLogin(username: string, password: string, ip: string) {
+		password = this.deGarbledeguck(password);
+
+		if (Player.userExists(username)) {
+
+			if (this.checkLoginQuery === null)
+				Player.checkLoginQuery = db.prepare(`SELECT id, name, accessLevel, colorValue, webchatKey block FROM users WHERE username=@username;`);
 		
+			let result = Player.checkLoginQuery.get({ username: username });
+			
+			if (result.block) {
+				// Yeah the account is banned
+				return { success: false, reason: "banned" }
+			}
+
+			if (bcrypt.compareSync(password, result.password)) {
+				// Authentication success
+				// Now we generate the required output data
+
+				let settingswb = new WebchatResponse();
+
+				// We'll generate the settings data first because thats big
+				// The "info" part of settings
+				let info = new WebchatInfo();
+				info.access(result.accessLevel);
+				info.displayName(result.name);
+				info.servertime(new Date().getTime());
+				info.welcome(Settings.settings.welcome);
+				info.defaultHSName(Settings.settings.default_name);
+				info.address(ip);
+				info.help(Settings.settings.chat_help_info, Settings.settings.chat_help_cmdlist);
+				info.privelege(result.accessLevel);
+
+				settingswb.info(info);
+
+				// The friend list
+				let friendlist = Player.getFriendsList(result.id);
+				friendlist.forEach(x => {
+					settingswb.addFriend(x.username, x.name);
+				})
+
+				// The block list
+				let blocklist = Player.getBlockList(result.id);
+				blocklist.forEach(x => {
+					settingswb.addBlock(x.username, x.name);
+				})
+
+				// The list of available chat colours
+				Settings.settings.chat_colors.forEach(x => {
+					settingswb.color(x.key, x.value)
+				})
+
+				// The list of available chat flairs
+				Settings.settings.chat_flairs.forEach(x => {
+					settingswb.flair(x);
+				})
+
+				// End the thing
+				settingswb.logged();
+
+				// Generate the response
+				let response = {
+					access: result.accessLevel,
+					color: result.colorValue,
+					display: result.name,
+					id: result.id,
+					key: result.webchatKey,
+					success: true,
+					username: username,
+					settings: settingswb.getResult()
+				};
+				return response;
+
+			} else {
+				// Authentication failure
+				return { success: false, reason: "password" }
+			}
+		} else {
+			// Our user doesnt even exist so bruh
+			return { success: false, reason: "username" }
+		}
+	}
+
+	static getFriendsListQuery: Database.Statement;
+	static getFriendsList(userid: number) {
+		if (Player.getFriendsListQuery === null)
+			Player.getFriendsListQuery = db.prepare(`SELECT name, username FROM user_friends A, users B WHERE user_id=@userid AND friend_id=B.id;`);
+		
+		let friendlist = Player.getFriendsListQuery.all({ userid: userid });
+		return friendlist;
+	}
+
+	static getBlockListQuery: Database.Statement;
+	static getBlockList(userid: number) {
+		if (Player.getBlockListQuery === null)
+			Player.getBlockListQuery = db.prepare(`SELECT name, username FROM user_blocks A, users B WHERE user_id=@userid AND block_id=B.id;`);
+		
+		let blockist = Player.getBlockListQuery.all({ userid: userid });
+		return blockist;
 	}
 
 	static deGarbledeguck(pwd: string) {

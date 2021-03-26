@@ -3,6 +3,7 @@ import * as url from 'url';
 import { initDatabase } from './database';
 import { Marble } from './marble';
 import { Player } from './player';
+import { Settings } from './settings';
 
 // A class that stores the response data that is to be sent back
 class WebResponse {
@@ -85,6 +86,7 @@ export class LBServer {
     // Starts the server
     start() {
         initDatabase();
+        Settings.initSettings();
         http.createServer((req, res) => {
             let urlObject = new url.URL(req.url, 'http://localhost/');
             console.log(urlObject);

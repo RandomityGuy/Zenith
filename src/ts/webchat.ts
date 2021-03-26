@@ -191,7 +191,7 @@ export class WebchatResponse {
 		this.text.push(`STATUS ${id} ${status}`);
 	}
 
-	color(id: number, hex: string) {
+	color(id: string, hex: string) {
 		this.text.push(`COLOR ${id} ${hex}`);
 	}
 
