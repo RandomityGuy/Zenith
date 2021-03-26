@@ -142,6 +142,19 @@ export class LBServer {
         return this.tryPQify(resp, req);
     }
 
+    @route("/api/Player/CheckLogin.php", ["GET", "POST"])
+    checkLogin(req: http.IncomingMessage) {
+        let urlObject = new url.URL(req.url, 'http://localhost/');
+        if (!urlObject.searchParams.has("username"))
+            return this.tryPQify(this.response("ARGUMENT username"), req);
+        if (!urlObject.searchParams.has("password"))
+            return this.tryPQify(this.response("ARGUMENT password"), req);
+        
+        let obj = Player.checkLogin(urlObject.searchParams.get("username"), urlObject.searchParams.get("password"), req.socket.remoteAddress);
+        let resp = this.response(obj);
+        return this.tryPQify(resp, req);
+    }
+
     @route("/")
     test(req: http.IncomingMessage) {
         Marble.getMarbleList();
