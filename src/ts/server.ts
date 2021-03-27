@@ -1,9 +1,11 @@
 import * as http from 'http';
 import * as url from 'url';
+import * as net from 'net';
 import { initDatabase } from './database';
 import { Marble } from './marble';
 import { Player } from './player';
 import { Settings } from './settings';
+import { WebchatServer } from './webchatserver';
 
 // A class that stores the response data that is to be sent back
 class WebResponse {
@@ -54,10 +56,9 @@ function route(path: string, methods: string[] = ["GET"]) {
     };
 }
 
-export class LBServer {
+export class PQServer {
 
-    // The server port
-    port: number = 1337;
+    webchatServer: WebchatServer
 
     constructor() {
 
@@ -87,6 +88,17 @@ export class LBServer {
     start() {
         initDatabase();
         Settings.initSettings();
+
+        let hostsplit = Settings.settings.PQServer.split(':'); // Naive but works for now
+        let hostname = hostsplit[0];
+        let port = Number.parseInt(hostsplit[1]);
+
+        console.log("Starting PQ Online Webchat Server");
+        this.webchatServer = new WebchatServer();
+        this.webchatServer.initialize();
+        console.log("PQ Online Webchat Server Started");
+
+        console.log("Starting PQ Online HTTP Server");
         http.createServer((req, res) => {
             let urlObject = new url.URL(req.url, 'http://localhost/');
             console.log(urlObject);
@@ -117,9 +129,64 @@ export class LBServer {
             res.writeHead(retresponse.code, Object.fromEntries(retresponse.headers));
             // Now write the response
             res.end(retresponse.response);
-        }).listen(this.port);
+        }).listen(port, hostname);
+        console.log("PQ Online HTTP Server Started");
     }
 
+    // SERVER
+    @route("api/Server/CheckPortOpen.php", ["GET", "POST"])
+    checkPortOpen(req: http.IncomingMessage) {
+
+        let urlObject = new url.URL(req.url, 'http://localhost/');
+        if (!urlObject.searchParams.has("port"))
+            return this.tryPQify(this.response("ARGUMENT port"), req);
+        let port = Number.parseInt(urlObject.searchParams.get("port"));
+
+        let conn = net.connect(port, req.socket.remoteAddress);
+        
+        let promises = [];
+
+        let p1 = new Promise((resolve: (status: string) => void, reject) => {
+            conn.on('error', () => {
+                resolve("PORT FAILURE");
+            });
+        })
+
+        let p2 = new Promise((resolve: (status: string) => void, reject) => {
+            conn.on('timeout', () => {
+                resolve("PORT FAILURE");
+            });
+        })
+
+        let p3 = new Promise((resolve: (status: string) => void, reject) => {
+            conn.on('connect', () => {
+                // We can connect it yeah lets destroy it now
+                conn.destroy();
+                resolve("PORT SUCCESS");
+            });
+        })
+
+        let obj = "PORT FAILURE";
+
+        Promise.race([p1, p2, p3]).then(val => {
+            obj = val;
+        });
+        let resp = this.response(obj);
+        return this.tryPQify(resp, req);
+    }
+
+    @route("api/Server/GetServerStatus.php", ["GET", "POST"])
+    getServerStatus(req: http.IncomingMessage) {
+        let obj = {
+            online: "true",
+            version: Settings.settings.gameVersion,
+            players: this.webchatServer.clients.size
+        };
+        let resp = this.response(obj);
+        return this.tryPQify(resp, req);
+    }
+
+    // MARBLE
     @route("/api/Marble/GetMarbleList.php", ["GET", "POST"])
     getMarbleList(req: http.IncomingMessage) {
         let obj = Marble.getMarbleList();
@@ -127,6 +194,7 @@ export class LBServer {
         return this.tryPQify(resp, req);
     }
 
+    // PLAYER
     @route("/api/Player/RegisterUser.php", ["GET", "POST"])
     registerUser(req: http.IncomingMessage) {
         let urlObject = new url.URL(req.url, 'http://localhost/');

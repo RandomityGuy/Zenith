@@ -1,4 +1,4 @@
-import { LBServer } from "./server";
+import { PQServer } from "./server";
 
-let server = new LBServer();
+let server = new PQServer();
 server.start();

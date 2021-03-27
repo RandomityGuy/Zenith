@@ -13,6 +13,11 @@
 	"show_egg_wr_messages":true,
 	"wr_player_count":20,
 
+	"PQServer": "localhost:1337",
+	"webchatServer": "localhost:420",
+
+	"gameVersion": 9000,
+
 	"chat_colors": [
 		{ "key": "0", "value": "000000" },
 		{ "key": "1", "value": "ff0000" },
