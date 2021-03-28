@@ -1,6 +1,8 @@
 import * as http from 'http';
 import * as url from 'url';
 import * as net from 'net';
+import * as fs from 'fs-extra'
+import * as path from 'path'
 import { initDatabase } from './database';
 import { Marble } from './marble';
 import { Player } from './player';
@@ -60,16 +62,18 @@ export class PQServer {
 
     webchatServer: WebchatServer
 
+    versionFileCache: string = null;
+
     constructor() {
 
     }
 
     // Handles the response generation for the route handler functions and does type coercion
-    response(resp: any, code: number = 200) {
-        if (resp instanceof WebResponse) return resp;
-        if (typeof resp === "string") return new WebResponse(resp, code, 'text/plain');
-        else if (resp instanceof Object) return new WebResponse(JSON.stringify(resp), code, 'application/json');
-        else return new WebResponse("Not Found", 404, 'text/plain');
+    response(resp: any, params: http.IncomingMessage, code: number = 200) {
+        if (resp instanceof WebResponse) return this.tryPQify(resp, params);
+        if (typeof resp === "string") return this.tryPQify(new WebResponse(resp, code, 'text/plain'), params);
+        else if (resp instanceof Object) return this.tryPQify(new WebResponse(JSON.stringify(resp), code, 'application/json'), params);
+        else return this.tryPQify(new WebResponse("Not Found", 404, 'text/plain'), params);
     }
 
     // Makes the response valid for pq to read
@@ -112,15 +116,30 @@ export class PQServer {
                 let route = paths.get(urlObject.pathname);
                 // Are we using the valid request methods?
                 if (route.methods.includes(req.method)) {
-                    // Get the response from the web route handler function
-                    let resp = route.func.call(this, req);
-                    // Handle the different return values
-                    if (typeof resp === "string")
-                        retresponse = this.response(resp, 200);
-                    else if (resp instanceof Array)
-                        retresponse = this.response(resp[0], resp[1]);
-                    else if (resp instanceof Object)
-                        retresponse = this.response(resp, 200);
+
+                    let gameOutdated = false;
+                    // Do a game version check first, don't wanna waste computing power if your game was outdated anyway
+                    if (urlObject.searchParams.has("version")) {
+                        if (Number.parseInt(urlObject.searchParams.get("version")) < Settings.settings.gameVersion) {
+                            retresponse = this.response({
+                                success: false,
+                                error: "Outdated game client"
+                            }, req);
+                            gameOutdated = true;
+                        }
+                    }
+
+                    if (!gameOutdated) {
+                        // Get the response from the web route handler function
+                        let resp = route.func.call(this, req);
+                        // Handle the different return values
+                        if (typeof resp === "string")
+                            retresponse = this.response(resp, req, 200);
+                        else if (resp instanceof Array)
+                            retresponse = this.response(resp[0], req, resp[1]);
+                        else if (resp instanceof Object)
+                            retresponse = this.response(resp, req, 200);
+                    }
                 }
             }
 
@@ -134,12 +153,21 @@ export class PQServer {
     }
 
     // SERVER
+
+    @route("api/Server/GetServerVersion.php.php", ["GET", "POST"])
+    getServerVersion(req: http.IncomingMessage) {
+        if (this.versionFileCache === null) {
+            this.versionFileCache = fs.readFileSync(path.join(__dirname,'storage', 'versions.json'), 'utf-8')
+        }
+        return this.response;
+    }
+
     @route("api/Server/CheckPortOpen.php", ["GET", "POST"])
     checkPortOpen(req: http.IncomingMessage) {
 
         let urlObject = new url.URL(req.url, 'http://localhost/');
         if (!urlObject.searchParams.has("port"))
-            return this.tryPQify(this.response("ARGUMENT port"), req);
+            return "ARGUMENT port";
         let port = Number.parseInt(urlObject.searchParams.get("port"));
 
         let conn = net.connect(port, req.socket.remoteAddress);
@@ -171,8 +199,7 @@ export class PQServer {
         Promise.race([p1, p2, p3]).then(val => {
             obj = val;
         });
-        let resp = this.response(obj);
-        return this.tryPQify(resp, req);
+        return obj;
     }
 
     @route("api/Server/GetServerStatus.php", ["GET", "POST"])
@@ -182,16 +209,14 @@ export class PQServer {
             version: Settings.settings.gameVersion,
             players: this.webchatServer.clients.size
         };
-        let resp = this.response(obj);
-        return this.tryPQify(resp, req);
+        return obj;
     }
 
     // MARBLE
     @route("/api/Marble/GetMarbleList.php", ["GET", "POST"])
     getMarbleList(req: http.IncomingMessage) {
         let obj = Marble.getMarbleList();
-        let resp = this.response(obj);
-        return this.tryPQify(resp, req);
+        return obj;
     }
 
     // PLAYER
@@ -199,28 +224,26 @@ export class PQServer {
     registerUser(req: http.IncomingMessage) {
         let urlObject = new url.URL(req.url, 'http://localhost/');
         if (!urlObject.searchParams.has("username"))
-            return this.tryPQify(this.response("ARGUMENT username"), req);
+            return "ARGUMENT username";
         if (!urlObject.searchParams.has("password"))
-            return this.tryPQify(this.response("ARGUMENT password"), req);
+            return "ARGUMENT password";
         if (!urlObject.searchParams.has("email"))
-            return this.tryPQify(this.response("ARGUMENT email"), req);
+            return "ARGUMENT email";
         
         let obj = Player.registerUser(urlObject.searchParams.get("email"), urlObject.searchParams.get("username"), urlObject.searchParams.get("password"));
-        let resp = this.response(obj);
-        return this.tryPQify(resp, req);
+        return obj;
     }
 
     @route("/api/Player/CheckLogin.php", ["GET", "POST"])
     checkLogin(req: http.IncomingMessage) {
         let urlObject = new url.URL(req.url, 'http://localhost/');
         if (!urlObject.searchParams.has("username"))
-            return this.tryPQify(this.response("ARGUMENT username"), req);
+            return "ARGUMENT username";
         if (!urlObject.searchParams.has("password"))
-            return this.tryPQify(this.response("ARGUMENT password"), req);
+            return "ARGUMENT password";
         
         let obj = Player.checkLogin(urlObject.searchParams.get("username"), urlObject.searchParams.get("password"), req.socket.remoteAddress);
-        let resp = this.response(obj);
-        return this.tryPQify(resp, req);
+        return obj;
     }
 
     @route("/")
@@ -235,8 +258,7 @@ export class PQServer {
             }],
             jobj2: "Test"
         };
-        let resp = this.response(obj);
-        return resp;
+        return obj;
     }
 
 }

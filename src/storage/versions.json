@@ -1,0 +1,47 @@
+[
+   {
+      "version":8329,
+      "title":"PlatinumQuest 2.4.2",
+      "desc":"This is the first update of PQ since we released its source code on GitHub (https:\/\/github.com\/PlatinumTeam\/PlatinumQuest) and it contains a number of community contributions from the last month! Sadly, this is also the last planned update of PQ, as we're unable to find any qualified\/willing maintainers for the project. Thanks for playing PlatinumQuest and Marble Blast Platinum over all these years, and keep on rollin'-- we'll see you around.\r\n\r\n Oh, and your change log as always:\r\n\r\n- [main_gi] Updated pause screen UI, now shows egg times too\r\n- [BlastedMarble] Added 10 bonus levels to MBG (offline only) from MBG for Xbox\r\n- [main_gi] Added ability for texture packs to customize fonts, including the gem\/TT popups\r\n- [main_gi] Made World Record times blue on the ingame scores list\r\n- [main_gi] Gem Madness now finishes the level on OOB instead of restarting\r\n- [main_gi] Made camera point towards the highest value gem when respawning in Hunt\r\n- [main_gi] Added option to change the number of chat lines displayed ingame while playing online\r\n- [main_gi] Added GemChangeTrigger which lets level makers add or subtract from a player's score\r\n- [main_gi] Renamed \"Animate Background\" option to \"Preload Levels\"\r\n- [main_gi] Fixed a number of typos in various levels\r\n- [Weather] Updated Cookies with various fixes\r\n- [BlastedMarble] Fixed fixed \"fixed High Maintenance\" maybe finally this time\r\n- [BlastedMarble] Fixed some teleporters on Speedrunning 101\r\n- [BlastedMarble] Updated MBU levels to use startHelpText instead of HelpTriggers\r\n- [BlastedMarble] Changed all gems in MBU levels to red, matching their original versions\r\n- [main_gi] Dropped leading zeroes on the gem counter\r\n- [main_gi] Dropped leading zeroes on the speedometer\r\n- [main_gi] Dropped leading zeroes on the laps counter\r\n- Actually, we dropped the tens place on the laps counter entirely\r\n- Fixed a hole in the roof of MBU KotM\r\n- Fast mode now makes the cannon launch screen fast\r\n- Fixed your display name sometimes showing your username\r\n- Fixed a couple font prefs being inconsistent",
+      "url":"https:\/\/marbleblast.com\/index.php\/downloads\/pq",
+      "timestamp":"2021-03-15 05:26:29",
+      "id":188,
+      "time":"2021-03-15 05:26 UTC"
+   },
+   {
+      "version":8289,
+      "title":"PlatinumQuest 2.4.1",
+      "desc":"This update has a number of changes for Custom Packs 60-69 and bug fixes from the last few weeks. \r\n\r\n- Buffed the AT on the following levels in packs 60-69: Gordian Knot, Goto 10, Pac Blast, Rink Ring, The Night Falls\r\n- Added a missing AT for DS Tick Tock Clock\r\n- Added a number of missing skyboxes for various levels in packs 60-69 \r\n- Added a couple Nest Egg Hints for levels in packs 60-69\r\n- Fix High Maintenance having a broken parented object\r\n- Fix checkpoints in PQ customs not clearing TT bonus\r\n- Fix level select\/pause menu\/actually a lot of menus lagging when playing complicated levels (eg Shock Flow)\r\n- Fix finish screen not updating WR if you beat the WR\r\n- Fix some buttons and text boxes not being clickable\r\n- Fix level select showing the wrong egg image for PQ customs\r\n- Fix online stats dialog not having a scrollbar\r\n- MIT licensed shaders (the rest is coming shortly!)",
+      "url":"https:\/\/marbleblast.com\/index.php\/downloads\/pq",
+      "timestamp":"2021-01-31 02:03:36",
+      "id":187,
+      "time":"2021-01-31 02:03 UTC"
+   },
+   {
+      "version":8264,
+      "title":"PlatinumQuest 2.4.0",
+      "desc":"Happy New Year! We're starting off the new year with new levels: Custom Packs 60-69! Also some bug fixes but you don't need to think about those too hard.\r\n\r\n- Added Level packs 60-69!\r\n- New fancy texture pack selector\r\n- Better controller support in some menus\r\n- Fixed some texture packs not deactivating all the way \r\n- Fixed instant cannon delay not working\r\n- Fixed some crashes in MP when your connection is bad\r\n- Fixed secret levels being saved as last opened and softlocking the game on load\r\n- Fixed a few MP levels that had incorrect scores\r\n- Added more ferns to some levels\r\n- Removed Change Log.txt since it wasn't being updated anyway",
+      "url":"https:\/\/marbleblast.com\/index.php\/downloads\/pq",
+      "timestamp":"2021-01-03 02:53:04",
+      "id":186,
+      "time":"2021-01-03 02:53 UTC"
+   },
+   {
+      "version":8216,
+      "title":"PlatinumQuest 2.3.44",
+      "desc":"Who would have guessed? It's more bug fixes! Fixes for the new bugs in 2.3.43 that is...\r\n- Fixed some levels breaking the marble and therefore the game\r\n- Fixed orange timer mode not being orange\r\n- Fixed finish screen not showing hunt challenge scores",
+      "url":"https:\/\/marbleblast.com\/index.php\/downloads\/pq",
+      "timestamp":"2020-11-29 10:04:28",
+      "id":185,
+      "time":"2020-11-29 10:04 UTC"
+   },
+   {
+      "version":8211,
+      "title":"PlatinumQuest 2.3.43",
+      "desc":"Happy bug-fixgiving! We're giving you some bug fixes and a couple major updates:\r\n- New \"Exit from this game\" menu with level details and bigger buttons\r\n- New \"MBG HD\" texture pack with traced and upscaled textures\r\n- Marble size in MBG levels is now correctly 0.2\r\n- Show rating increase on the LB finish screen\r\n- Added option to always show the world record on the LB finish screen\r\n- Timer is now dark theme by default (use Orange Timer texture pack to revert)\r\n- Changed \"Normal\" mode name to something more descriptive\r\n- Normal mode levels with a time limit will now display \"Time Trial\" mode instead\r\n- New extender code now with more Rust! (riir)\r\n- Fixed Groovyball not being named Groovyball\r\n- Fixed 11 MBG levels using Shell.ogg as background music\r\n- Fixed MP ingame scores list being super laggy for large games (thanks, Jeff!)\r\n- Fixed MP ingame scores list being broken for teams\r\n- Fixed some of the PQ skies being really compressed and ugly\r\n- Fixed playing a broken rrec in the LBs sending you to the Main Menu\r\n- Fixed public builds being able to save mcs files (just use mis)\r\n- Fixed MBP levels with MissionInfo.platinumTime not showing PT on finish screen\r\n- Fixed MBU high friction floor using the wrong normal map\r\n- Fixed a crash loading some images\r\n- Fixed a bug in the thing that makes shapes load fast\r\n- Fixed Jeff, again\r\n- Deleted the one comment written by Three in the entire game <3\r\n- Shaders written by Whirligig now under MIT license",
+      "url":"https:\/\/marbleblast.com\/index.php\/downloads\/pq",
+      "timestamp":"2020-11-29 02:24:19",
+      "id":184,
+      "time":"2020-11-29 02:24 UTC"
+   }
+]
