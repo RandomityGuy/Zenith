@@ -148,6 +148,21 @@ export class Player {
 		return blockist;
 	}
 
+	// Helper function to just authenticate a username and token, gives back a username if successful else false
+	static authenticateQuery: Database.Statement;
+	static authenticate(username: string, key: string) {
+		if (Player.authenticateQuery === null)
+			Player.authenticateQuery = Storage.db.prepare(`SELECT id FROM users WHERE username=@username AND webchatKey=@key;`);
+		
+		if (this.userExists(username)) {
+			let result = Player.authenticateQuery.get({ username: username, key: key });
+			if (result === undefined)
+				return false;
+			return result.id;
+		}
+		return false;
+	}
+
 	static deGarbledeguck(pwd: string) {
 		if (pwd.substr(0, 3) !== pwd)
 			return pwd;

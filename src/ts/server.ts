@@ -209,6 +209,30 @@ export class PQServer {
         return obj;
     }
 
+    @route("/api/Marble/GetCurrentMarble.php", ["GET", "POST"])
+    getCurrentMarble(req: http.IncomingMessage) {
+        let urlObject = new url.URL(req.url, 'http://localhost/');
+        if (!urlObject.searchParams.has("username"))
+            return "ARGUMENT username";
+        if (!urlObject.searchParams.has("key"))
+            return "ARGUMENT key";
+        let obj = Marble.getCurrentMarble(urlObject.searchParams.get("username"), urlObject.searchParams.get("key"));
+        return obj;
+    }
+
+    @route("/api/Marble/RecordMarbleSelection.php", ["GET", "POST"])
+    recordMarbleSelection(req: http.IncomingMessage) {
+        let urlObject = new url.URL(req.url, 'http://localhost/');
+        if (!urlObject.searchParams.has("username"))
+            return "ARGUMENT username";
+        if (!urlObject.searchParams.has("key"))
+            return "ARGUMENT key";
+        if (!urlObject.searchParams.has("marbleId"))
+            return "ARGUMENT marbleId";
+        let res = Marble.recordMarbleSelection(urlObject.searchParams.get("username"), urlObject.searchParams.get("key"), Number.parseInt(urlObject.searchParams.get("marbleId")));
+        return res ? "SUCCESS" : "FAILURE";
+    }
+
     // PLAYER
     @route("/api/Player/RegisterUser.php", ["GET", "POST"])
     registerUser(req: http.IncomingMessage) {

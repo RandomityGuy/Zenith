@@ -4,9 +4,9 @@
 ./Metrics/RecordGraphicsMetrics.php  
 
 ### Marble
-./Marble/GetCurrentMarble.php  
+~~./Marble/GetCurrentMarble.php~~  
 ~~./Marble/GetMarbleList.php  ~~
-./Marble/RecordMarbleSelection.php  
+~~./Marble/RecordMarbleSelection.php~~  
 
 ### Egg:
 ./Egg/RecordEgg.php  

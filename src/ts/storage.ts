@@ -26,27 +26,27 @@ export class Storage {
 		webchatServer: string,
 
 		gameVersion: number
-    }
-    
-    static db: Database.Database;
+	}
+	
+	static db: Database.Database;
 
-    static gameVersionList: [];
+	static gameVersionList: [];
 
-    static initStorage() {
-        // Connect to the database
-        Storage.db = new Database(path.join(__dirname,'db', 'leaderboards.db'), {});
-	    Storage.db.pragma('journal_mode = WAL');
+	static initStorage() {
+		// Connect to the database
+		Storage.db = new Database(path.join(__dirname,'db', 'leaderboards.db'), {});
+		Storage.db.pragma('journal_mode = WAL');
 
-        // Load the settings file
+		// Load the settings file
 		let file = fs.readFileSync(path.join(__dirname,'storage', 'settings.json'), 'utf-8')
-        Storage.settings = JSON.parse(file);
-        
-        // Load the game version list file
+		Storage.settings = JSON.parse(file);
+		
+		// Load the game version list file
 		file = fs.readFileSync(path.join(__dirname,'storage', 'versions.json'), 'utf-8')
-        Storage.gameVersionList = JSON.parse(file);
-    }
-    
-    static dispose() {
-        Storage.db.close();
-    }
+		Storage.gameVersionList = JSON.parse(file);
+	}
+	
+	static dispose() {
+		Storage.db.close();
+	}
 }
