@@ -1,15 +1,14 @@
 import Database from "better-sqlite3";
-import { db } from "./database";
 import * as bcrypt from "bcrypt";
 import { WebchatInfo, WebchatResponse } from "./webchat";
-import { Settings } from "./settings";
+import { Storage } from "./storage"
 
 export class Player {
 
 	static userExistsQuery: Database.Statement;
 	static userExists(username: string) {
 		if (Player.userExistsQuery === null)
-			Player.userExistsQuery = db.prepare(`SELECT id FROM users WHERE username=@username;`);
+			Player.userExistsQuery = Storage.db.prepare(`SELECT id FROM users WHERE username=@username;`);
 		
 		return Player.userExistsQuery.get({ username: username }) !== undefined;
 	}
@@ -32,7 +31,7 @@ export class Player {
 		}
 
 		if (Player.registerUserQuery === null)
-			Player.registerUserQuery = db.prepare(`INSERT INTO users ("name", "username", "email", "password", "block", "sendEmail", "registerDate", "lastvisitDate", "activation", "params", "lastResetTime", "resetCount", "bluePoster", "hasColor", "colorValue", "titleFlair", "titlePrefix", "titleSuffix", "statusMsg", "profileBanner", "donations", "credits", "credits_spent", "otpKey", "otep", "requireReset", "webchatKey") VALUES (@username, @username, @email, @password, '0', '0', DATETIME('now','localtime'), DATETIME('now','localtime'), '', '', DATETIME('now','localtime'), '0', '0', '0', '000000', '0', '0', '0', '', '0', '0.0', '0', '0', '', '', '0', @token);`)
+			Player.registerUserQuery = Storage.db.prepare(`INSERT INTO users ("name", "username", "email", "password", "block", "sendEmail", "registerDate", "lastvisitDate", "activation", "params", "lastResetTime", "resetCount", "bluePoster", "hasColor", "colorValue", "titleFlair", "titlePrefix", "titleSuffix", "statusMsg", "profileBanner", "donations", "credits", "credits_spent", "otpKey", "otep", "requireReset", "webchatKey") VALUES (@username, @username, @email, @password, '0', '0', DATETIME('now','localtime'), DATETIME('now','localtime'), '', '', DATETIME('now','localtime'), '0', '0', '0', '000000', '0', '0', '0', '', '0', '0.0', '0', '0', '', '', '0', @token);`)
 		
 		let hash = bcrypt.hashSync(password, 10);
 		
@@ -54,7 +53,7 @@ export class Player {
 		if (Player.userExists(username)) {
 
 			if (this.checkLoginQuery === null)
-				Player.checkLoginQuery = db.prepare(`SELECT id, name, accessLevel, colorValue, webchatKey block FROM users WHERE username=@username;`);
+				Player.checkLoginQuery = Storage.db.prepare(`SELECT id, name, accessLevel, colorValue, webchatKey block FROM users WHERE username=@username;`);
 		
 			let result = Player.checkLoginQuery.get({ username: username });
 			
@@ -75,10 +74,10 @@ export class Player {
 				info.access(result.accessLevel);
 				info.displayName(result.name);
 				info.servertime(new Date().getTime());
-				info.welcome(Settings.settings.welcome);
-				info.defaultHSName(Settings.settings.default_name);
+				info.welcome(Storage.settings.welcome);
+				info.defaultHSName(Storage.settings.default_name);
 				info.address(ip);
-				info.help(Settings.settings.chat_help_info, Settings.settings.chat_help_cmdlist);
+				info.help(Storage.settings.chat_help_info, Storage.settings.chat_help_cmdlist);
 				info.privelege(result.accessLevel);
 
 				settingswb.info(info);
@@ -96,12 +95,12 @@ export class Player {
 				})
 
 				// The list of available chat colours
-				Settings.settings.chat_colors.forEach(x => {
+				Storage.settings.chat_colors.forEach(x => {
 					settingswb.color(x.key, x.value)
 				})
 
 				// The list of available chat flairs
-				Settings.settings.chat_flairs.forEach(x => {
+				Storage.settings.chat_flairs.forEach(x => {
 					settingswb.flair(x);
 				})
 
@@ -134,7 +133,7 @@ export class Player {
 	static getFriendsListQuery: Database.Statement;
 	static getFriendsList(userid: number) {
 		if (Player.getFriendsListQuery === null)
-			Player.getFriendsListQuery = db.prepare(`SELECT name, username FROM user_friends A, users B WHERE user_id=@userid AND friend_id=B.id;`);
+			Player.getFriendsListQuery = Storage.db.prepare(`SELECT name, username FROM user_friends A, users B WHERE user_id=@userid AND friend_id=B.id;`);
 		
 		let friendlist = Player.getFriendsListQuery.all({ userid: userid });
 		return friendlist;
@@ -143,7 +142,7 @@ export class Player {
 	static getBlockListQuery: Database.Statement;
 	static getBlockList(userid: number) {
 		if (Player.getBlockListQuery === null)
-			Player.getBlockListQuery = db.prepare(`SELECT name, username FROM user_blocks A, users B WHERE user_id=@userid AND block_id=B.id;`);
+			Player.getBlockListQuery = Storage.db.prepare(`SELECT name, username FROM user_blocks A, users B WHERE user_id=@userid AND block_id=B.id;`);
 		
 		let blockist = Player.getBlockListQuery.all({ userid: userid });
 		return blockist;

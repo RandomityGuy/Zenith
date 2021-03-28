@@ -3,10 +3,9 @@ import * as url from 'url';
 import * as net from 'net';
 import * as fs from 'fs-extra'
 import * as path from 'path'
-import { initDatabase } from './database';
+import { Storage } from "./storage"
 import { Marble } from './marble';
 import { Player } from './player';
-import { Settings } from './settings';
 import { WebchatServer } from './webchatserver';
 
 // A class that stores the response data that is to be sent back
@@ -62,8 +61,6 @@ export class PQServer {
 
     webchatServer: WebchatServer
 
-    versionFileCache: string = null;
-
     constructor() {
 
     }
@@ -90,10 +87,9 @@ export class PQServer {
     
     // Starts the server
     start() {
-        initDatabase();
-        Settings.initSettings();
+        Storage.initStorage();
 
-        let hostsplit = Settings.settings.PQServer.split(':'); // Naive but works for now
+        let hostsplit = Storage.settings.PQServer.split(':'); // Naive but works for now
         let hostname = hostsplit[0];
         let port = Number.parseInt(hostsplit[1]);
 
@@ -105,7 +101,6 @@ export class PQServer {
         console.log("Starting PQ Online HTTP Server");
         http.createServer((req, res) => {
             let urlObject = new url.URL(req.url, 'http://localhost/');
-            console.log(urlObject);
 
             // Generate a default response
             var retresponse = new WebResponse("Not Found", 404, 'text/plain');
@@ -120,7 +115,7 @@ export class PQServer {
                     let gameOutdated = false;
                     // Do a game version check first, don't wanna waste computing power if your game was outdated anyway
                     if (urlObject.searchParams.has("version")) {
-                        if (Number.parseInt(urlObject.searchParams.get("version")) < Settings.settings.gameVersion) {
+                        if (Number.parseInt(urlObject.searchParams.get("version")) < Storage.settings.gameVersion) {
                             retresponse = this.response({
                                 success: false,
                                 error: "Outdated game client"
@@ -135,8 +130,6 @@ export class PQServer {
                         // Handle the different return values
                         if (typeof resp === "string")
                             retresponse = this.response(resp, req, 200);
-                        else if (resp instanceof Array)
-                            retresponse = this.response(resp[0], req, resp[1]);
                         else if (resp instanceof Object)
                             retresponse = this.response(resp, req, 200);
                     }
@@ -154,15 +147,12 @@ export class PQServer {
 
     // SERVER
 
-    @route("api/Server/GetServerVersion.php.php", ["GET", "POST"])
+    @route("/api/Server/GetServerVersion.php", ["GET", "POST"])
     getServerVersion(req: http.IncomingMessage) {
-        if (this.versionFileCache === null) {
-            this.versionFileCache = fs.readFileSync(path.join(__dirname,'storage', 'versions.json'), 'utf-8')
-        }
-        return this.response;
+        return Storage.gameVersionList;
     }
 
-    @route("api/Server/CheckPortOpen.php", ["GET", "POST"])
+    @route("/api/Server/CheckPortOpen.php", ["GET", "POST"])
     checkPortOpen(req: http.IncomingMessage) {
 
         let urlObject = new url.URL(req.url, 'http://localhost/');
@@ -202,11 +192,11 @@ export class PQServer {
         return obj;
     }
 
-    @route("api/Server/GetServerStatus.php", ["GET", "POST"])
+    @route("/api/Server/GetServerStatus.php", ["GET", "POST"])
     getServerStatus(req: http.IncomingMessage) {
         let obj = {
             online: "true",
-            version: Settings.settings.gameVersion,
+            version: Storage.settings.gameVersion,
             players: this.webchatServer.clients.size
         };
         return obj;

@@ -1,5 +1,5 @@
 import * as net from "net"
-import { Settings } from "./settings";
+import { Storage } from "./storage"
 
 export class WebchatServer {
     server: net.Server
@@ -8,7 +8,7 @@ export class WebchatServer {
 
     initialize() {
         // We assume the settings are already loaded, if not, then we explode into a million pieces
-        let hostsplit = Settings.settings.webchatServer.split(':'); // Naive but works for now
+        let hostsplit = Storage.settings.webchatServer.split(':'); // Naive but works for now
         let hostname = hostsplit[0];
         let port = Number.parseInt(hostsplit[1]);
 
