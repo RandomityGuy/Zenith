@@ -7,6 +7,7 @@ import { Storage } from "./storage"
 import { Marble } from './marble';
 import { Player } from './player';
 import { WebchatServer } from './webchatserver';
+import { Util } from './util';
 
 // A class that stores the response data that is to be sent back
 class WebResponse {
@@ -259,6 +260,26 @@ export class PQServer {
         let obj = Player.checkLogin(urlObject.searchParams.get("username"), urlObject.searchParams.get("password"), req.socket.remoteAddress);
         return obj;
     }
+
+    // CHAT
+    @route("/api/Chat/GetFlairBitmap.php ", ["GET", "POST"])
+    getFlairBitmap(req: http.IncomingMessage) {
+
+        // Maybe cache this if feasible?
+
+        let urlObject = new url.URL(req.url, 'http://localhost/');
+        if (!urlObject.searchParams.has("flair"))
+            return "ARGUMENT flair";
+        let flairfile = urlObject.searchParams.get('flair') + ".png";
+        if (fs.pathExistsSync(path.join(__dirname, 'storage', ' flairs', flairfile))) {
+            return Util.responseAsFile(flairfile);
+        } else {
+            return {
+                error: "Flair not found"
+            }
+        }
+    }
+
 
     @route("/")
     test(req: http.IncomingMessage) {

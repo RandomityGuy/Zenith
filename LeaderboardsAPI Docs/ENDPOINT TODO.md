@@ -17,7 +17,7 @@
 ./Achievement/GetAchievementList.php  
 
 ### Chat
-./Chat/GetFlairBitmap.php  
+~~./Chat/GetFlairBitmap.php  ~~
 
 ### Server
 ~~./Server/CheckPortOpen.php  ~~
