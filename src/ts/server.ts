@@ -261,6 +261,12 @@ export class PQServer {
         return obj;
     }
 
+    @route("/api/Player/GetTopPlayers.php", ["GET", "POST"])
+    getTopPlayers(req: http.IncomingMessage) {
+        let obj = Player.getTopPlayers();
+        return obj;
+    }
+
     // CHAT
     @route("/api/Chat/GetFlairBitmap.php ", ["GET", "POST"])
     getFlairBitmap(req: http.IncomingMessage) {

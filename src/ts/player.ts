@@ -118,20 +118,18 @@ export class Player {
 		}
 	}
 
-	static getFriendsList(userid: number) {		
+	static getFriendsList(userid: number) {
 		let friendlist = Storage.query(`SELECT name, username FROM user_friends A, users B WHERE user_id=@userid AND friend_id=B.id;`).all({ userid: userid });
 		return friendlist;
 	}
 
-	static getBlockListQuery: Database.Statement;
-	static getBlockList(userid: number) {	
+	static getBlockList(userid: number) {
 		let blockist = Storage.query(`SELECT name, username FROM user_blocks A, users B WHERE user_id=@userid AND block_id=B.id;`).all({ userid: userid });
 		return blockist;
 	}
 
 	// Helper function to just authenticate a username and token, gives back a username if successful else false
-	static authenticateQuery: Database.Statement;
-	static authenticate(username: string, key: string) {		
+	static authenticate(username: string, key: string) {
 		if (this.userExists(username)) {
 			let result = Storage.query(`SELECT id FROM users WHERE username=@username AND webchatKey=@key;`).get({ username: username, key: key });
 			if (result === undefined)
@@ -139,6 +137,31 @@ export class Player {
 			return result.id;
 		}
 		return false;
+	}
+
+	static getTopPlayers() {
+		
+		let formatRating = (category: string) => {
+			let ratingQuery = Storage.query(`SELECT U.name, U.username, ${category} AS rating FROM user_ratings AS R, users AS U WHERE U.id = R.user_id AND U.block = 0 ORDER BY ${category} DESC;`);
+			let ratings = ratingQuery.all({ category: category });
+			let result = {
+				display: ratings.map(x => x.name),
+				rating: ratings.map(x => Number.parseInt(x.rating)),
+				username: ratings.map(x => x.username)
+			}
+			return result;
+		}
+
+		let result = {
+			rating_mbg: formatRating("rating_mbg"),
+			rating_mbp: formatRating("rating_mbp"),
+			rating_mbu: formatRating("rating_mbu"),
+			rating_pq: formatRating("rating_pq"),
+			rating_mp: formatRating("rating_mp"),
+			rating_general: formatRating("rating_general"),
+			rating_custom: formatRating("rating_custom"),
+		}
+		return result;
 	}
 
 	static deGarbledeguck(pwd: string) {

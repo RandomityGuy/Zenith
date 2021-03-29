@@ -52,7 +52,7 @@
 ./Player/GetPlayerStats.php   
 ./Player/GetPlayerAvatar.php  
 ~~./Player/CheckLogin.php  ~~
-./Player/GetTopPlayers.php  
+~~./Player/GetTopPlayers.php  ~~
 ./Player/GetPlayerAchievements.php  
 ~~./Player/RegisterUser.php  ~~
 ./Player/GetPlayerProfileInfo.php  
