@@ -27,6 +27,8 @@ export class Storage {
 
 		gameVersion: number
 	}
+
+	static queryCache: Map<string, Database.Statement>;
 	
 	static db: Database.Database;
 
@@ -44,6 +46,17 @@ export class Storage {
 		// Load the game version list file
 		file = fs.readFileSync(path.join(__dirname,'storage', 'versions.json'), 'utf-8')
 		Storage.gameVersionList = JSON.parse(file);
+
+		this.queryCache = new Map<string, Database.Statement>();
+	}
+
+	static query(queryString: string) {
+		if (Storage.queryCache.has(queryString))
+			return Storage.queryCache.get(queryString);
+		
+		let q = Storage.db.prepare(queryString);
+		Storage.queryCache.set(queryString, q);
+		return q;
 	}
 	
 	static dispose() {

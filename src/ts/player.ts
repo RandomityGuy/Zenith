@@ -5,15 +5,10 @@ import { Storage } from "./storage"
 
 export class Player {
 
-	static userExistsQuery: Database.Statement;
 	static userExists(username: string) {
-		if (Player.userExistsQuery === null)
-			Player.userExistsQuery = Storage.db.prepare(`SELECT id FROM users WHERE username=@username;`);
-		
-		return Player.userExistsQuery.get({ username: username }) !== undefined;
+		return Storage.query(`SELECT id FROM users WHERE username=@username;`).get({ username: username }) !== undefined;
 	}
 
-	static registerUserQuery: Database.Statement;
 	static registerUser(email: string, username: string, password: string) {
 
 		if (email === "" || username === "" || password.length < 8) { // Disallow empty usernames, emails and less than 8 character passwords
@@ -29,13 +24,10 @@ export class Player {
 				error: "User already exists"
 			};
 		}
-
-		if (Player.registerUserQuery === null)
-			Player.registerUserQuery = Storage.db.prepare(`INSERT INTO users ("name", "username", "email", "password", "block", "sendEmail", "registerDate", "lastvisitDate", "activation", "params", "lastResetTime", "resetCount", "bluePoster", "hasColor", "colorValue", "titleFlair", "titlePrefix", "titleSuffix", "statusMsg", "profileBanner", "donations", "credits", "credits_spent", "otpKey", "otep", "requireReset", "webchatKey") VALUES (@username, @username, @email, @password, '0', '0', DATETIME('now','localtime'), DATETIME('now','localtime'), '', '', DATETIME('now','localtime'), '0', '0', '0', '000000', '0', '0', '0', '', '0', '0.0', '0', '0', '', '', '0', @token);`)
 		
 		let hash = bcrypt.hashSync(password, 10);
-		
-		let result = Player.registerUserQuery.run([{ username: username, email: email, password: hash, token: Player.strRandom(20) }]);
+		let query = Storage.query(`INSERT INTO users ("name", "username", "email", "password", "block", "sendEmail", "registerDate", "lastvisitDate", "activation", "params", "lastResetTime", "resetCount", "bluePoster", "hasColor", "colorValue", "titleFlair", "titlePrefix", "titleSuffix", "statusMsg", "profileBanner", "donations", "credits", "credits_spent", "otpKey", "otep", "requireReset", "webchatKey") VALUES (@username, @username, @email, @password, '0', '0', DATETIME('now','localtime'), DATETIME('now','localtime'), '', '', DATETIME('now','localtime'), '0', '0', '0', '000000', '0', '0', '0', '', '0', '0.0', '0', '0', '', '', '0', @token);`);
+		let result = query.run([{ username: username, email: email, password: hash, token: Player.strRandom(20) }]);
 		if (result.changes === 0)
 			return {
 				result: "false",
@@ -46,16 +38,12 @@ export class Player {
 		};
 	}
 
-	static checkLoginQuery: Database.Statement;
 	static checkLogin(username: string, password: string, ip: string) {
 		password = this.deGarbledeguck(password);
 
 		if (Player.userExists(username)) {
-
-			if (this.checkLoginQuery === null)
-				Player.checkLoginQuery = Storage.db.prepare(`SELECT id, name, accessLevel, colorValue, webchatKey block FROM users WHERE username=@username;`);
 		
-			let result = Player.checkLoginQuery.get({ username: username });
+			let result = Storage.query(`SELECT id, name, accessLevel, colorValue, webchatKey block FROM users WHERE username=@username;`).get({ username: username });
 			
 			if (result.block) {
 				// Yeah the account is banned
@@ -130,32 +118,22 @@ export class Player {
 		}
 	}
 
-	static getFriendsListQuery: Database.Statement;
-	static getFriendsList(userid: number) {
-		if (Player.getFriendsListQuery === null)
-			Player.getFriendsListQuery = Storage.db.prepare(`SELECT name, username FROM user_friends A, users B WHERE user_id=@userid AND friend_id=B.id;`);
-		
-		let friendlist = Player.getFriendsListQuery.all({ userid: userid });
+	static getFriendsList(userid: number) {		
+		let friendlist = Storage.query(`SELECT name, username FROM user_friends A, users B WHERE user_id=@userid AND friend_id=B.id;`).all({ userid: userid });
 		return friendlist;
 	}
 
 	static getBlockListQuery: Database.Statement;
-	static getBlockList(userid: number) {
-		if (Player.getBlockListQuery === null)
-			Player.getBlockListQuery = Storage.db.prepare(`SELECT name, username FROM user_blocks A, users B WHERE user_id=@userid AND block_id=B.id;`);
-		
-		let blockist = Player.getBlockListQuery.all({ userid: userid });
+	static getBlockList(userid: number) {	
+		let blockist = Storage.query(`SELECT name, username FROM user_blocks A, users B WHERE user_id=@userid AND block_id=B.id;`).all({ userid: userid });
 		return blockist;
 	}
 
 	// Helper function to just authenticate a username and token, gives back a username if successful else false
 	static authenticateQuery: Database.Statement;
-	static authenticate(username: string, key: string) {
-		if (Player.authenticateQuery === null)
-			Player.authenticateQuery = Storage.db.prepare(`SELECT id FROM users WHERE username=@username AND webchatKey=@key;`);
-		
+	static authenticate(username: string, key: string) {		
 		if (this.userExists(username)) {
-			let result = Player.authenticateQuery.get({ username: username, key: key });
+			let result = Storage.query(`SELECT id FROM users WHERE username=@username AND webchatKey=@key;`).get({ username: username, key: key });
 			if (result === undefined)
 				return false;
 			return result.id;
