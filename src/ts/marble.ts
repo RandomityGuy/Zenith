@@ -23,18 +23,10 @@ export class Marble {
 	static recordMarbleSelection(username: string, key: string, marbleId: number) {
 		let id = Player.authenticate(username, key);
 		if (id !== null) {
-			// Check if we have an entry in the marble selection table or soemthing
-			if (Marble.getCurrentMarble(username, key) === "") {
-				// We don't
-				// TODO CHECK FOR NONEXISTENT MARBLES
-				let res = Storage.query("INSERT INTO user_current_marble_selection(user_id, marble_id) VALUES(@userid,@marbleid);").run({ userid: id, marbleid: marbleId });
-				return res.changes !== 0;
-			} else {
-				// Do an update table
-				let res = Storage.query("UPDATE user_current_marble_selection SET marble_id=@marbleid WHERE @user_id=@userid;").run({ userid: id, marbleid: marbleId });
-
-				return res.changes !== 0;
-			}
+			// TODO CHECK FOR NONEXISTENT MARBLES
+			// This query does an insert or update if exists.
+			let res = Storage.query("REPLACE INTO user_current_marble_selection(user_id, marble_id) VALUES(@userid,@marbleid);").run({ userid: id, marbleid: marbleId });
+			return res.changes !== 0;
 		}
 		return false;
 	}
