@@ -26,7 +26,7 @@
 
 ### Mission
 ./Mission/RateMission.php  
-./Mission/GetMissionList.php  
+~~./Mission/GetMissionList.php  ~~
 
 ### Score
 ./Score/GetPersonalTopScores.php  
