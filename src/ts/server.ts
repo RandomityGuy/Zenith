@@ -279,7 +279,7 @@ export class PQServer {
 	}
 
 	// CHAT
-	@route("/api/Chat/GetFlairBitmap.php ", ["GET", "POST"])
+	@route("/api/Chat/GetFlairBitmap.php", ["GET", "POST"])
 	getFlairBitmap(req: http.IncomingMessage) {
 
 		// Maybe cache this if feasible?
@@ -295,6 +295,34 @@ export class PQServer {
 				error: "Flair not found"
 			}
 		}
+	}
+
+	// METRICS
+	@route("Metrics/RecordGraphicsMetrics.php", ["GET", "POST"])
+	recordGraphicsMetrics(req: http.IncomingMessage) {
+		let urlObject = new url.URL(req.url, 'http://localhost/');
+		if (!urlObject.searchParams.has("username"))
+			return "ARGUMENT username";
+		if (!urlObject.searchParams.has("key"))
+			return "ARGUMENT key";
+		let userId = Player.authenticate(urlObject.searchParams.get("username"), urlObject.searchParams.get("key"));
+		if (userId === null)
+			return "FAILURE";
+		
+		let jdict = new Map<string, string[]>();
+		for (const key of urlObject.searchParams.keys()) {
+			if (key === "username" || key === "key")
+				continue;
+			
+			jdict.set(key, urlObject.searchParams.getAll(key));
+		};
+
+		let metricsString = JSON.stringify(Object.fromEntries(jdict));
+
+		Storage.query("INSERT INTO metrics(user_id,metrics) VALUES(@userId,@metrics);").run({ userId: userId, metrics: metricsString });
+		
+		return "SUCCESS";
+
 	}
 
 

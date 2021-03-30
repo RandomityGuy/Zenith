@@ -128,15 +128,15 @@ export class Player {
 		return blockist;
 	}
 
-	// Helper function to just authenticate a username and token, gives back a username if successful else false
+	// Helper function to just authenticate a username and token, gives back a username if successful else null
 	static authenticate(username: string, key: string) {
 		if (this.userExists(username)) {
 			let result = Storage.query(`SELECT id FROM users WHERE username=@username AND webchatKey=@key;`).get({ username: username, key: key });
 			if (result === undefined)
-				return false;
+				return null;
 			return result.id;
 		}
-		return false;
+		return null;
 	}
 
 	static getTopPlayers() {

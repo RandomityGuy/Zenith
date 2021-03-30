@@ -1,7 +1,7 @@
 ## Endpoints
 
 ### Metrics 
-./Metrics/RecordGraphicsMetrics.php  
+~~./Metrics/RecordGraphicsMetrics.php  ~~
 
 ### Marble
 ~~./Marble/GetCurrentMarble.php~~  
