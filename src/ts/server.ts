@@ -9,6 +9,7 @@ import { Player } from './player';
 import { WebchatServer } from './webchatserver';
 import { Util } from './util';
 import { Mission } from './mission';
+import { Egg } from './egg';
 
 // A class that stores the response data that is to be sent back
 class WebResponse {
@@ -204,6 +205,23 @@ export class PQServer {
 		return obj;
 	}
 
+	// EGG
+	@route("/api/Egg/GetEasterEggs.php", ["GET", "POST"])
+	getEasterEggs(req: http.IncomingMessage) {
+		let urlObject = new url.URL(req.url, 'http://localhost/');
+		if (!urlObject.searchParams.has("username"))
+			return "ARGUMENT username";
+		if (!urlObject.searchParams.has("key"))
+			return "ARGUMENT key";
+		let userId = Player.authenticate(urlObject.searchParams.get("username"), urlObject.searchParams.get("key"));
+		if (userId === null) {
+			return "FAILURE NEEDLOGIN";
+		} else {
+			let obj = Egg.getEasterEggs(userId);
+			return obj;
+		}
+	}	
+
 	// MARBLE
 	@route("/api/Marble/GetMarbleList.php", ["GET", "POST"])
 	getMarbleList(req: http.IncomingMessage) {
@@ -218,8 +236,13 @@ export class PQServer {
 			return "ARGUMENT username";
 		if (!urlObject.searchParams.has("key"))
 			return "ARGUMENT key";
-		let obj = Marble.getCurrentMarble(urlObject.searchParams.get("username"), urlObject.searchParams.get("key"));
-		return obj;
+		let userId = Player.authenticate(urlObject.searchParams.get("username"), urlObject.searchParams.get("key"));
+		if (userId === null) {
+			return "FAILURE NEEDLOGIN";
+		} else {
+			let obj = Marble.getCurrentMarble(urlObject.searchParams.get("username"), urlObject.searchParams.get("key"));
+			return obj;
+		}
 	}
 
 	@route("/api/Marble/RecordMarbleSelection.php", ["GET", "POST"])
