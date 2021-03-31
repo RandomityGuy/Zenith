@@ -10,7 +10,7 @@
 
 ### Egg:
 ./Egg/RecordEgg.php  
-./Egg/GetEasterEggs.php  
+~~./Egg/GetEasterEggs.php  ~~
 
 ### Achievement
 ./Achievement/RecordAchievement.php  
@@ -30,7 +30,7 @@
 
 ### Score
 ./Score/GetPersonalTopScores.php  
-./Score/GetPersonalTopScoreList.php  
+~~./Score/GetPersonalTopScoreList.php  ~~
 ./Score/GetGlobalTopScores.php  
 ./Score/RecordScore.php  
 ./Score/GetTopScoreModes.php  

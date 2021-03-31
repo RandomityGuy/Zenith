@@ -27,7 +27,7 @@ export class Player {
 		
 		let hash = bcrypt.hashSync(password, 10);
 		let query = Storage.query(`INSERT INTO users ("name", "username", "email", "password", "block", "sendEmail", "registerDate", "lastvisitDate", "activation", "params", "lastResetTime", "resetCount", "bluePoster", "hasColor", "colorValue", "titleFlair", "titlePrefix", "titleSuffix", "statusMsg", "profileBanner", "donations", "credits", "credits_spent", "otpKey", "otep", "requireReset", "webchatKey") VALUES (@username, @username, @email, @password, '0', '0', DATETIME('now','localtime'), DATETIME('now','localtime'), '', '', DATETIME('now','localtime'), '0', '0', '0', '000000', '0', '0', '0', '', '0', '0.0', '0', '0', '', '', '0', @token);`);
-		let result = query.run([{ username: username, email: email, password: hash, token: Player.strRandom(20) }]);
+		let result = query.run({ username: username, email: email, password: hash, token: Player.strRandom(20) });
 		if (result.changes === 0)
 			return {
 				result: "false",
@@ -40,11 +40,12 @@ export class Player {
 
 	static checkLogin(username: string, password: string, ip: string) {
 		password = this.deGarbledeguck(password);
+		console.log(password);
 
 		if (Player.userExists(username)) {
 		
-			let result = Storage.query(`SELECT id, name, accessLevel, colorValue, webchatKey block FROM users WHERE username=@username;`).get({ username: username });
-			
+			let result = Storage.query(`SELECT id, name, accessLevel, colorValue, webchatKey, block, password FROM users WHERE username=@username;`).get({ username: username });
+			console.log(result);
 			if (result.block) {
 				// Yeah the account is banned
 				return { success: false, reason: "banned" }
@@ -165,7 +166,7 @@ export class Player {
 	}
 
 	static deGarbledeguck(pwd: string) {
-		if (pwd.substr(0, 3) !== pwd)
+		if (pwd.substr(0, 3) !== "gdg")
 			return pwd;
 		
 		let finish = "";
@@ -178,7 +179,7 @@ export class Player {
 			let chr = String.fromCharCode(128 - val);
 			finish += chr;
 		}
-		return finish;
+		return Array.from(finish).reverse().join('');
 	}
 
 	static strRandom(length: number) {
