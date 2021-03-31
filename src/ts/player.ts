@@ -138,8 +138,7 @@ export class Player {
 		return null;
 	}
 
-	static getTopPlayers() {
-		
+	static getTopPlayers() {	
 		let formatRating = (category: string) => {
 			let ratingQuery = Storage.query(`SELECT U.name, U.username, ${category} AS rating FROM user_ratings AS R, users AS U WHERE U.id = R.user_id AND U.block = 0 ORDER BY ${category} DESC;`);
 			let ratings = ratingQuery.all({ category: category });

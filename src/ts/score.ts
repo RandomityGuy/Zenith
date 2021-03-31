@@ -38,4 +38,29 @@ export class Score {
 		let obj = Object.fromEntries(dict);
 		return obj;
 	}
+
+	static getPersonalTopScores(userId: number, missionId: number, modifiers: number | null = null) {
+		let scoreData = Storage.query("SELECT * FROM user_scores WHERE user_id = @userId AND mission_id = @missionId ORDER BY sort;").all({ userId: userId, missionId: missionId });
+		let obj = {
+			scores: scoreData,
+			missionId: missionId
+		};
+		return obj;
+	}
+
+	static getGlobalTopScores(missionId: number, modifiers: number | null = null) {
+		let scoreData = Storage.query("SELECT * FROM user_scores WHERE mission_id = @missionId ORDER BY sort;").all({ missionId: missionId });
+		let columnData = [
+			{ name: "placement", display: "#", type: "place", tab: "1", width: "40" },
+			{ name: "name", display: "Player", type: "string", tab: "40", width: "-190" },
+			{ name: "score", display: "Score", tab: "-145", width: "-75" },
+			{ name: "rating", display: "Rating", type: "score", tab: "0", width: "75" }
+		]
+		let obj = {
+			columns: columnData,
+			scores: scoreData,
+			missionId: missionId
+		};
+		return obj;
+	}
 }

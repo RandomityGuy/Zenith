@@ -155,6 +155,7 @@ export class PQServer {
 		// Generate a default response
 		var retresponse = new WebResponse("Not Found", 404, 'text/plain');
 
+		console.log(`ATTEMPT ${urlObject.pathname}`);
 		// Does the requested url have a valid WebRoute defined?
 		if (paths.has(urlObject.pathname)) {
 			// Get the route
@@ -185,6 +186,8 @@ export class PQServer {
 					else if (resp instanceof Object)
 						retresponse = this.response(resp, webreq, 200);
 				}
+
+				console.log(`OUTGOING ${route.path}`);
 			}
 		}
 
@@ -323,6 +326,31 @@ export class PQServer {
 		return scoreData;
 	}
 
+	@route("/api/Score/GetPersonalTopScores.php", ["GET", "POST"])
+	getPersonalTopScores(req: WebRequest) {
+		if (!req.searchParams.has("username"))
+			return "ARGUMENT username";
+		if (!req.searchParams.has("key"))
+			return "ARGUMENT key";
+		if (!req.searchParams.has("missionId"))
+			return "ARGUMENT missionId";
+		let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+		if (userId === null)
+			return "FAILURE NEEDLOGIN";
+		
+		let scoreData = Score.getPersonalTopScores(userId, Number.parseInt(req.searchParams.get('missionId')), 0);
+		return scoreData;
+	}
+
+	@route("/api/Score/GetGlobalTopScores.php", ["GET", "POST"])
+	getGlobalTopScores(req: WebRequest) {
+		if (!req.searchParams.has("missionId"))
+			return "ARGUMENT missionId";
+		
+		let scoreData = Score.getGlobalTopScores(Number.parseInt(req.searchParams.get('missionId')), 0);
+		return scoreData;
+	}
+
 
 	// PLAYER
 	@route("/api/Player/RegisterUser.php", ["GET", "POST"])
@@ -383,7 +411,8 @@ export class PQServer {
 	}
 
 	// METRICS
-	@route("Metrics/RecordGraphicsMetrics.php", ["GET", "POST"])
+	@route("/api/Player/RecordMetrics.php", ["GET", "POST"])
+	@route("/api/Metrics/RecordGraphicsMetrics.php", ["GET", "POST"])
 	recordGraphicsMetrics(req: WebRequest) {
 		if (!req.searchParams.has("username"))
 			return "ARGUMENT username";
@@ -406,9 +435,7 @@ export class PQServer {
 		Storage.query("INSERT INTO metrics(user_id,metrics) VALUES(@userId,@metrics);").run({ userId: userId, metrics: metricsString });
 		
 		return "SUCCESS";
-
 	}
-
 
 	@route("/")
 	test(req: WebRequest) {
