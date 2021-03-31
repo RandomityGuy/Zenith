@@ -63,4 +63,26 @@ export class Score {
 		};
 		return obj;
 	}
+
+	static getTopScoreModes(missionId: string) {
+		let columnData = [
+			{ name: "placement", display: "#", type: "place", tab: "1", width: "40" },
+			{ name: "name", display: "Player", type: "string", tab: "40", width: "-190" },
+			{ name: "score", display: "Score", tab: "-145", width: "-75" },
+			{ name: "rating", display: "Rating", type: "score", tab: "0", width: "75" }
+		]
+		let modeData = {
+			columns: columnData,
+			missionId: missionId,
+			scores: [] as any[]
+		}
+		let obj = {
+			dd: modeData,
+			egg: modeData,
+			lap: modeData,
+			quota100: modeData,
+			missionId: missionId
+		}
+		return obj;
+	}
 }

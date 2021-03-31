@@ -351,6 +351,15 @@ export class PQServer {
 		return scoreData;
 	}
 
+	@route("/api/Score/GetTopScoreModes.php", ["GET", "POST"])
+	getTopScoreModes(req: WebRequest) {
+		if (!req.searchParams.has("missionId"))
+			return "ARGUMENT missionId";
+		
+		let modeData = Score.getTopScoreModes(req.searchParams.get('missionId'));
+		return modeData;
+	}
+
 
 	// PLAYER
 	@route("/api/Player/RegisterUser.php", ["GET", "POST"])
@@ -381,6 +390,27 @@ export class PQServer {
 	getTopPlayers(req: WebRequest) {
 		let obj = Player.getTopPlayers();
 		return obj;
+	}
+
+	@route("/api/Player/GetPlayerAchievements.php", ["GET", "POST"])
+	getPlayerAchievements(req: WebRequest) {
+		let targetUser = "";
+		if (!req.searchParams.has("username"))
+			return "ARGUMENT username";
+		else {
+			targetUser = req.searchParams.get("username");
+		}
+		if (!req.searchParams.has("key"))
+			return "ARGUMENT key";
+		if (req.searchParams.has("user"))
+			targetUser = req.searchParams.get("user");
+		
+		let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+		if (userId === null)
+			return "FAILURE NEEDLOGIN";
+		
+		let achievementData = Player.getPlayerAchievements(targetUser);
+		return achievementData;
 	}
 
 	// MISSION

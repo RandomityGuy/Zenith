@@ -9,6 +9,20 @@ export class Player {
 		return Storage.query(`SELECT id FROM users WHERE username=@username;`).get({ username: username }) !== undefined;
 	}
 
+	static getUsername(userId: number) {
+		let data = Storage.query(`SELECT username FROM users WHERE id=@userId`).get({ userId: userId });
+		if (data === undefined)
+			return null;
+		return data.username;
+	}
+
+	static getUserId(username: string) {
+		let data = Storage.query(`SELECT id FROM users WHERE username=@username`).get({ username: username });
+		if (data === undefined)
+			return null;
+		return data.id;
+	}
+
 	static registerUser(email: string, username: string, password: string) {
 
 		if (email === "" || username === "" || password.length < 8) { // Disallow empty usernames, emails and less than 8 character passwords
@@ -160,6 +174,16 @@ export class Player {
 			rating_custom: formatRating("rating_custom"),
 		}
 		return result;
+	}
+
+	static getPlayerAchievements(username: string) {
+		let userId = Player.getUserId(username);
+		let achievementList = Storage.query(`SELECT achievement_id FROM user_achievements WHERE user_id = @userId;`).all({ userId: userId }).map(x => x.achievement_id);
+		let obj = {
+			username: username,
+			achievements: achievementList
+		};
+		return obj;
 	}
 
 	static deGarbledeguck(pwd: string) {
