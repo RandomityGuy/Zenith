@@ -11,6 +11,7 @@ import { Util } from './util';
 import { Mission } from './mission';
 import { Egg } from './egg';
 import { Score } from './score';
+import { Achievement } from './achievement';
 
 // A class to store incoming web request data
 class WebRequest {
@@ -298,6 +299,13 @@ export class PQServer {
 			return "ARGUMENT marbleId";
 		let res = Marble.recordMarbleSelection(req.searchParams.get("username"), req.searchParams.get("key"), Number.parseInt(req.searchParams.get("marbleId")));
 		return res ? "SUCCESS" : "FAILURE";
+	}
+
+	// ACHIEVEMENT
+	@route("/api/Achievement/GetAchievementList.php", ["GET", "POST"])
+	getAchievementList(req: WebRequest) {
+		let obj = Achievement.getAchievementList();
+		return obj;
 	}
 
 	// SCORE

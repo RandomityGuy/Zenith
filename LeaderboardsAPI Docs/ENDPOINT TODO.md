@@ -14,7 +14,7 @@
 
 ### Achievement
 ./Achievement/RecordAchievement.php  
-./Achievement/GetAchievementList.php  
+~~./Achievement/GetAchievementList.php~~  
 
 ### Chat
 ~~./Chat/GetFlairBitmap.php  ~~
