@@ -19,7 +19,7 @@ export class Score {
 											WHERE score_type = 'score' AND disabled = 0 
 											GROUP BY mission_id HAVING MAX(score)
 										) AS S, missions, mission_games
-										WHERE missions.is_custom = 0 AND missions.id = S.mission_id AND missions.id = S.mission_id AND mission_games.id = missions.game_id AND mission_games.game_type = "Single Player"
+										WHERE missions.is_custom = 0 AND missions.id = S.mission_id AND missions.id = S.mission_id AND mission_games.id = missions.game_id AND mission_games.game_type = 'Single Player'
 										GROUP BY mission_id HAVING MAX(priority) ANd MAX(timestamp)
 									) AS T
 									WHERE T.user_id = @userId;`).all({ userId: userId }).map(x => x.mission_id);

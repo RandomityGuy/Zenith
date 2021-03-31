@@ -40,12 +40,10 @@ export class Player {
 
 	static checkLogin(username: string, password: string, ip: string) {
 		password = this.deGarbledeguck(password);
-		console.log(password);
 
 		if (Player.userExists(username)) {
 		
 			let result = Storage.query(`SELECT id, name, accessLevel, colorValue, webchatKey, block, password FROM users WHERE username=@username;`).get({ username: username });
-			console.log(result);
 			if (result.block) {
 				// Yeah the account is banned
 				return { success: false, reason: "banned" }
