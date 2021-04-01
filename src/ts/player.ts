@@ -2,6 +2,9 @@ import Database from "better-sqlite3";
 import * as bcrypt from "bcrypt";
 import { WebchatInfo, WebchatResponse } from "./webchat";
 import { Storage } from "./storage"
+import * as fs from "fs-extra"
+import * as path from "path"
+import { Util } from "./util";
 
 export class Player {
 
@@ -184,6 +187,118 @@ export class Player {
 			achievements: achievementList
 		};
 		return obj;
+	}
+
+	static getPlayerProfileInfo(username: string) {
+		let userId = Player.getUserId(username);
+		let initialData = Storage.query("SELECT accessLevel AS access, registerDate, colorValue AS color, donations, id, statusMsg AS status, titleFlair, titlePrefix, titleSuffix, username, name FROM users WHERE id = @userId;").get({ userId: userId });
+
+		let registerDate = new Date(Date.parse(initialData.registerDate));
+		let today = new Date();
+
+		let span = new Date(today.getTime() - registerDate.getTime());
+
+		let accountAge = `${span.getFullYear() - 1970} Years ${span.getMonth()} Months ${span.getDate()} Days ${span.getHours()} Hours ${span.getMinutes()} Minutes ${span.getSeconds()} Seconds`;
+		let friends = Player.getFriendsList(userId);
+
+		let lastLevel = Storage.query("SELECT missions.name FROM user_scores, missions WHERE user_id = @userId AND missions.id = user_scores.mission_id ORDER BY timestamp DESC LIMIT 1;").get({ userId: userId });
+		if (lastLevel === undefined)
+			lastLevel = "No Level Played!";
+		else
+			lastLevel = lastLevel.name;
+		let mpAverage = Storage.query("SELECT ROUND(AVG(score)) AS averageMP FROM match_scores, user_scores WHERE match_scores.user_id = @userId AND match_scores.score_id = user_scores.id AND score_type = 'score';").get({ userId: userId });
+		if (mpAverage === undefined)
+			mpAverage = "No Recorded Matches";
+		else
+			mpAverage = mpAverage.averageMP;
+		let mpBestData = Storage.query("SELECT MAX(score * player_count), score, player_count, missions.name FROM match_scores, user_scores, matches, missions WHERE match_scores.user_id = @userId AND match_scores.score_id = user_scores.id AND score_type = 'score' AND match_scores.match_id = matches.id AND missions.id = matches.mission_id;").get({ userId: userId });
+		let mpBest = "No Recorded Matches";
+		if (mpBestData !== undefined) {
+			mpBest = `${mpBestData.score} points on ${mpBestData.name} against ${mpBestData.player_count - 1} players.`;
+		}
+
+		let mpGameData = Storage.query("SELECT placement FROM matches, match_scores WHERE matches.id = match_scores.match_id AND matches.team_count = 0 AND user_id = @userId AND matches.player_count > 1 AND placement").all({ userId: userId });
+		let mpTeamGameData = Storage.query("SELECT placement FROM matches, match_scores WHERE matches.id = match_scores.match_id AND matches.team_count > 1 AND user_id = @userId AND matches.player_count > 1 AND placement").all({ userId: userId });
+
+		if (mpGameData === undefined) // Yeah bruh
+			mpGameData = [];
+		if (mpTeamGameData === undefined)
+			mpTeamGameData = [];
+
+		let mpGames = new Map<number, number>();
+		let mpTeamGames = new Map<number, number>();
+		for (let i = 0; i < 4; i++) {
+			mpGames.set(i + 1, mpGameData.filter(x => x.placement === (i + 1)).length);
+			mpTeamGames.set(i + 1, mpTeamGameData.filter(x => x.placement === (i+1)).length);
+		}
+		mpGames.set(5, mpGameData.filter(x => x.placement > 4).length);
+		mpTeamGames.set(5, mpTeamGameData.filter(x => x.placement > 4).length);
+
+		let mpGems = Storage.query("SELECT SUM(gems_1_point) AS red, SUM(gems_2_point) AS yellow, SUM(gems_5_point) AS blue, SUM(gems_10_point) AS platinum FROM match_scores, user_scores WHERE user_scores.id = match_scores.score_id AND user_scores.user_id = @userId").get({ userId: userId });
+		if (mpGems === undefined) {
+			mpGems = {
+				red: 0,
+				yellow: 0,
+				blue: 0,
+				platinum: 0
+			}
+		}
+		let rating = Storage.query("SELECT * FROM user_ratings WHERE user_id = @userId").get({ userId: userId });
+		let ranking = Storage.query(`SELECT * FROM (SELECT 
+									rank() OVER (ORDER BY rating_general DESC) AS 'rating_general', 
+									rank() OVER (ORDER BY rating_custom DESC) AS 'rating_custom', 
+									rank() OVER (ORDER BY rating_mbg DESC) AS 'rating_mbg',
+									rank() OVER (ORDER BY rating_mbp DESC) AS 'rating_mbp',
+									rank() OVER (ORDER BY rating_mbu DESC) AS 'rating_mbu',
+									rank() OVER (ORDER BY rating_pq DESC) AS 'rating_pq',
+									rank() OVER (ORDER BY rating_mp DESC) AS 'rating_mp',
+									rank() OVER (ORDER BY rating_egg DESC) AS 'rating_egg',
+									rank() OVER (ORDER BY rating_achievement DESC) AS 'rating_achievement',
+									rank() OVER (ORDER BY rating_quota_bonus DESC) AS 'rating_quota_bonus',
+									user_id
+									FROM user_ratings)
+									WHERE user_id = @userId;`).get({ userId: userId });
+		let flair: string;
+		let flairId = initialData.titleFlair !== null ? Number.parseInt(initialData.titleFlair) : 0;
+		if (Storage.settings.chat_flairs.length > flairId) {
+			flair = Storage.settings.chat_flairs[flairId];
+		}
+		let obj = {
+			access: initialData.access,
+			accountAge: accountAge,
+			color: initialData.color,
+			display: initialData.name,
+			donations: initialData.donations,
+			friends: friends,
+			id: userId,
+			lastLevel: lastLevel,
+			mp_average: mpAverage,
+			mp_best: mpBest,
+			mp_games: Object.fromEntries(mpGames),
+			mp_team_games: Object.fromEntries(mpTeamGames),
+			mp_gems: mpGems,
+			ranking: ranking,
+			rating: rating,
+			registerDate: initialData.registerDate,
+			status: initialData.status,
+			titles: {
+				flair: flair,
+				prefix: initialData.titlePrefix === null ? "" : initialData.titlePrefix,
+				suffix: initialData.titleSuffix === null ? "" : initialData.titleSuffix
+			},
+			totalTime: 0, // Yeah bruh fix this
+			username: username
+		};
+
+		return obj;
+	}
+
+	static getPlayerAvatar(username: string) {
+		let userId = Player.getUserId(username);
+		if (fs.existsSync(path.join(__dirname, 'storage', 'avatars', `${userId}.png`))) {
+			return Util.responseAsFile(path.join(__dirname, 'storage', 'avatars', `${userId}.png`));
+		} else
+			return Util.responseAsFile(path.join(__dirname, 'storage', 'avatars', `nophoto.png`));
 	}
 
 	static deGarbledeguck(pwd: string) {

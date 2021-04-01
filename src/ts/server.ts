@@ -311,6 +311,21 @@ export class PQServer {
 		return obj;
 	}
 
+	@route("/api/Achievement/RecordAchievement.php", ["GET", "POST"])
+	recordAchievement(req: WebRequest) {
+		if (!req.searchParams.has("username"))
+			return "ARGUMENT username";
+		if (!req.searchParams.has("key"))
+			return "ARGUMENT key";
+		if (!req.searchParams.has("achievement"))
+			return "ARGUMENT achievement";
+		let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+		if (userId === null)
+			return "FAILURE NEEDLOGIN";
+		let obj = Achievement.recordAchievement(Number.parseInt(userId), Number.parseInt(req.searchParams.get("achievement")));
+		return obj;
+	}
+
 	// SCORE
 	@route("/api/Score/GetPersonalTopScoreList.php", ["GET", "POST"])
 	getPersonalTopScoreList(req: WebRequest) {
@@ -391,6 +406,24 @@ export class PQServer {
 	getTopPlayers(req: WebRequest) {
 		let obj = Player.getTopPlayers();
 		return obj;
+	}
+
+	@route("/api/Player/GetPlayerAvatar.php", ["GET", "POST"])
+	getPlayerAvatar(req: WebRequest) {
+		if (!req.searchParams.has("user"))
+			return "ARGUMENT user";
+		let user = req.searchParams.get("user");
+		let obj = Player.getPlayerAvatar(user);
+		obj.filename = `avatar${user}.png`;
+		return obj;
+	}
+
+	@route("/api/Player/GetPlayerProfileInfo.php", ["GET", "POST"])
+	getPlayerProfileInfo(req: WebRequest) {
+		if (!req.searchParams.has("user"))
+			return "ARGUMENT user";
+		let user = req.searchParams.get("user");
+		return Player.getPlayerProfileInfo(user);
 	}
 
 	@route("/api/Player/GetPlayerAchievements.php", ["GET", "POST"])

@@ -41,10 +41,16 @@ export class WebchatServer {
 		// Now we set up the socket callbacks
 		socket.on('close', (hadError) => this.onDisconnect(player, hadError));
 		socket.on('data', (data) => this.onDataRaw(player, data));
+		socket.on('error', (err) => this.onError(player, err));
 	}
 
 	onDisconnect(player: WebchatPlayer, hadError: boolean) {
 		// Bye bye!
+		this.clients.delete(player);
+	}
+
+	onError(player: WebchatPlayer, error: Error) {
+		console.log(`Player ${player.username} errored out due to ${error.message}`);
 		this.clients.delete(player);
 	}
 

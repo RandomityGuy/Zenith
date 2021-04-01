@@ -23,4 +23,22 @@ export class Achievement {
 
         return obj;
     }
+
+    static recordAchievement(userId: number, achievementId: number) {
+        let achievementData = Storage.query("SELECT manual FROM achievement_names WHERE id = @achievementId;").get({ achievementId: achievementId });
+        if (achievementData === undefined) {
+            return "NOACH";
+        } else {
+            if (!achievementData.manual) {
+                return "AUTOMATIC";
+            } else {
+                let data = Storage.query("REPLACE INTO user_achievements(user_id, achievement_id, timestamp) VALUES(@userId, @achievementId, DATETIME('now','localtime'));").run({ userId: userId, achievementId: achievementId });
+                if (data.changes > 0) {
+                    return "GRANTED";
+                } else {
+                    return "FAILURE";
+                }
+            }
+        }
+    }
 }

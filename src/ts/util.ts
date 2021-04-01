@@ -11,7 +11,7 @@ export class Util {
         md5.update(data);
         let hash = md5.digest('hex');
 
-        let base64data = Buffer.from(data).toString('base64');
+        let base64data = fs.readFileSync(filepath, { encoding: 'base64' });
 
         let returnvalue = {
             filename: path.basename(filepath),
