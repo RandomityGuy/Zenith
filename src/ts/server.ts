@@ -342,6 +342,7 @@ export class PQServer {
 		return scoreData;
 	}
 
+	@route("/api/Score/GetGlobalScores.php", ["GET", "POST"])
 	@route("/api/Score/GetGlobalTopScores.php", ["GET", "POST"])
 	getGlobalTopScores(req: WebRequest) {
 		if (!req.searchParams.has("missionId"))
@@ -356,7 +357,7 @@ export class PQServer {
 		if (!req.searchParams.has("missionId"))
 			return "ARGUMENT missionId";
 		
-		let modeData = Score.getTopScoreModes(req.searchParams.get('missionId'));
+		let modeData = Score.getTopScoreModes(Number.parseInt(req.searchParams.get('missionId')));
 		return modeData;
 	}
 

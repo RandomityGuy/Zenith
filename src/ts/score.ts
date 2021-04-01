@@ -48,8 +48,8 @@ export class Score {
 		return obj;
 	}
 
-	static getGlobalTopScores(missionId: number, modifiers: number | null = null) {
-		let scoreData = Storage.query("SELECT * FROM user_scores WHERE mission_id = @missionId ORDER BY sort;").all({ missionId: missionId });
+	static getGlobalTopScores(missionId: number, modifiers: number = 0) {
+		let scoreData = Storage.query("SELECT gem_count, gems_1_point, gems_2_point, gems_5_point, gems_10_point, user_scores.id, modifiers, users.name, users.username, origin, row_number() OVER (ORDER BY sort) AS placement, rating, score, score_type, timestamp, total_bonus, user_id FROM user_scores, users WHERE mission_id = @missionId AND users.id = user_scores.user_id AND (modifiers & @modifier = @modifier) GROUP BY user_id HAVING MIN(sort);").all({ missionId: missionId, modifier: modifiers });
 		let columnData = [
 			{ name: "placement", display: "#", type: "place", tab: "1", width: "40" },
 			{ name: "name", display: "Player", type: "string", tab: "40", width: "-190" },
@@ -64,25 +64,42 @@ export class Score {
 		return obj;
 	}
 
-	static getTopScoreModes(missionId: string) {
+	static getTopScoreModes(missionId: number) {
+		console.log("MISSION ID");
+		console.log(missionId);
 		let columnData = [
 			{ name: "placement", display: "#", type: "place", tab: "1", width: "40" },
-			{ name: "name", display: "Player", type: "string", tab: "40", width: "-190" },
-			{ name: "score", display: "Score", tab: "-145", width: "-75" },
-			{ name: "rating", display: "Rating", type: "score", tab: "0", width: "75" }
+			{ name: "name", display: "Player", type: "string", tab: "40", width: "-75" },
+			{ name: "score", display: "Time", type: "time", tab: "-75", width: "75" },
 		]
-		let modeData = {
-			columns: columnData,
-			missionId: missionId,
-			scores: [] as any[]
-		}
+		let columnData2 = [
+			{ name: "placement", display: "#", type: "place", tab: "1", width: "40" },
+			{ name: "name", display: "Player", type: "string", tab: "40", width: "-75" },
+			{ name: "time", display: "Time", type: "time", tab: "-75", width: "75" },
+		]
+		let ddscoredata = this.getGlobalTopScores(missionId, 1 << 2);
+		ddscoredata.columns = columnData;
+
+		let eggscoredata = Storage.query("SELECT name, username, time, row_number() OVER (ORDER BY time) AS placement  FROM user_eggs, users WHERE mission_id = @missionId AND users.id = user_eggs.user_id GROUP BY user_id HAVING MIN(time);").all({ missionId: missionId });
+		let laptimesdata = Storage.query("SELECT user_id, name, username, time, row_number() OVER (ORDER BY time) AS placement  FROM user_lap_times, users WHERE mission_id = @missionId AND users.id = user_lap_times.user_id GROUP BY user_id HAVING MIN(time);").all({ missionId: missionId });
+		let quota100data = this.getGlobalTopScores(missionId, 1 << 4);
+		quota100data.columns = columnData;
 		let obj = {
-			dd: modeData,
-			egg: modeData,
-			lap: modeData,
-			quota100: modeData,
+			dd: ddscoredata,
+			egg: {
+				scores: eggscoredata,
+				columns: columnData2,
+				missionId: missionId,
+			},
+			lap: {
+				scores: laptimesdata,
+				columns: columnData2,
+				missionId: missionId,
+			},
+			quota100: quota100data,
 			missionId: missionId
 		}
+
 		return obj;
 	}
 }

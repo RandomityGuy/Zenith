@@ -29,12 +29,12 @@
 ~~./Mission/GetMissionList.php  ~~
 
 ### Score
-./Score/GetPersonalTopScores.php  
+~~./Score/GetPersonalTopScores.php  ~~
 ~~./Score/GetPersonalTopScoreList.php  ~~
-./Score/GetGlobalTopScores.php  
+~~./Score/GetGlobalTopScores.php  ~~
 ./Score/RecordScore.php  
-./Score/GetTopScoreModes.php  
-./Score/GetGlobalScores.php  
+~~./Score/GetTopScoreModes.php  ~~
+~~./Score/GetGlobalScores.php  ~~
 
 ### Replay
 ./Replay/GetReplay.php  
@@ -48,11 +48,11 @@
 ./Multiplayer/VerifyPlayer.php  
 
 ### Player
-./Player/RecordMetrics.php  
+~~./Player/RecordMetrics.php  ~~
 ./Player/GetPlayerStats.php   
 ./Player/GetPlayerAvatar.php  
 ~~./Player/CheckLogin.php  ~~
 ~~./Player/GetTopPlayers.php  ~~
-./Player/GetPlayerAchievements.php  
+~~./Player/GetPlayerAchievements.php  ~~
 ~~./Player/RegisterUser.php  ~~
 ./Player/GetPlayerProfileInfo.php  

@@ -5,9 +5,9 @@ export class Mission {
 		let gameListData = Storage.query("SELECT display, force_gamemode, has_blast, id, name FROM mission_games WHERE game_type = @gameType AND disabled=0;").all({ gameType: gameType });
 
 		let gameList = gameListData.map(gameData => {
-			let difficultyListData = Storage.query("SELECT * FROM mission_difficulties WHERE game_id = @gameId AND disabled = 0;").all({ gameId: gameData.id });
+			let difficultyListData = Storage.query("SELECT * FROM mission_difficulties WHERE game_id = @gameId AND disabled = 0 ORDER BY sort_index;").all({ gameId: gameData.id });
 			let difficultyList = difficultyListData.map(difficultyData => {
-				let missionList = Storage.query("SELECT M.basename, M.difficulty_id, M.file, M.game_id, M.gamemode, I.has_egg, M.hash, M.id, M.is_custom, M.modification, M.name, M.sort_index FROM missions M, mission_rating_info I WHERE M.game_id = @gameId AND M.difficulty_id = @difficultyId AND M.is_custom = 0 AND M.id = I.mission_id AND I.disabled = 0;").all({ gameId: gameData.id, difficultyId: difficultyData.id });
+				let missionList = Storage.query("SELECT M.basename, M.difficulty_id, M.file, M.game_id, M.gamemode, I.has_egg, M.hash, M.id, M.is_custom, M.modification, M.name, M.sort_index FROM missions M, mission_rating_info I WHERE M.game_id = @gameId AND M.difficulty_id = @difficultyId AND M.is_custom = 0 AND M.id = I.mission_id AND I.disabled = 0 ORDER BY sort_index;").all({ gameId: gameData.id, difficultyId: difficultyData.id });
 
 				let difficulty = {
 					bitmap_directory: difficultyData.bitmap_directory,
