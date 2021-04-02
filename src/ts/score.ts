@@ -2,7 +2,7 @@ import { Storage } from "./storage";
 
 export class Score {
 	static getPersonalTopScoreList(userId: number) {
-		let topScoresData = Storage.query("SELECT mission_id, score, score_type FROM user_scores WHERE user_id = @userId GROUP BY mission_id HAVING MIN(sort);").all({ userId: userId });
+		let topScoresData = Storage.query("SELECT mission_id, score, score_type FROM user_scores WHERE user_id = @userId AND user_scores.disabled = 0 GROUP BY mission_id HAVING sort = MIN(sort);").all({ userId: userId });
 		let lapTimes = Storage.query("SELECT mission_id, time as 'score', 'time' as score_type FROM user_lap_times WHERE user_id = @userId GROUP BY mission_id HAVING MIN(time);").all({ userId: userId })
 		let quota100 = Storage.query("SELECT mission_id, score, score_type FROM user_scores WHERE user_id = @userId AND (modifiers & (1 << 4) = (1 << 4)) GROUP BY mission_id HAVING (CASE WHEN score_type='time' THEN MIN(score) ELSE MAX(score) END)").all({ userId: userId });
 		let wrList = Storage.query(`SELECT T.mission_id
@@ -40,7 +40,7 @@ export class Score {
 	}
 
 	static getPersonalTopScores(userId: number, missionId: number, modifiers: number | null = null) {
-		let scoreData = Storage.query("SELECT * FROM user_scores WHERE user_id = @userId AND mission_id = @missionId ORDER BY sort;").all({ userId: userId, missionId: missionId });
+		let scoreData = Storage.query("SELECT * FROM user_scores WHERE user_id = @userId AND mission_id = @missionId AND user_scores.disabled = 0 ORDER BY sort;").all({ userId: userId, missionId: missionId });
 		let obj = {
 			scores: scoreData,
 			missionId: missionId
@@ -49,7 +49,7 @@ export class Score {
 	}
 
 	static getGlobalTopScores(missionId: number, modifiers: number = 0) {
-		let scoreData = Storage.query("SELECT gem_count, gems_1_point, gems_2_point, gems_5_point, gems_10_point, user_scores.id, modifiers, users.name, users.username, origin, row_number() OVER (ORDER BY sort) AS placement, rating, score, score_type, timestamp, total_bonus, user_id FROM user_scores, users WHERE mission_id = @missionId AND users.id = user_scores.user_id AND (modifiers & @modifier = @modifier) GROUP BY user_id HAVING MIN(sort);").all({ missionId: missionId, modifier: modifiers });
+		let scoreData = Storage.query("SELECT gem_count, gems_1_point, gems_2_point, gems_5_point, gems_10_point, user_scores.id, modifiers, users.name, users.username, origin, row_number() OVER (ORDER BY sort) AS placement, rating, score, score_type, timestamp, total_bonus, user_id FROM user_scores, users WHERE mission_id = @missionId AND users.id = user_scores.user_id AND (modifiers & @modifier = @modifier) AND disabled = 0 GROUP BY user_id").all({ missionId: missionId, modifier: modifiers });
 		let columnData = [
 			{ name: "placement", display: "#", type: "place", tab: "1", width: "40" },
 			{ name: "name", display: "Player", type: "string", tab: "40", width: "-190" },
@@ -65,8 +65,6 @@ export class Score {
 	}
 
 	static getTopScoreModes(missionId: number) {
-		console.log("MISSION ID");
-		console.log(missionId);
 		let columnData = [
 			{ name: "placement", display: "#", type: "place", tab: "1", width: "40" },
 			{ name: "name", display: "Player", type: "string", tab: "40", width: "-75" },

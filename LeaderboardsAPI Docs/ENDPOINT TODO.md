@@ -49,7 +49,7 @@
 
 ### Player
 ~~./Player/RecordMetrics.php~~  
-./Player/GetPlayerStats.php   
+~~./Player/GetPlayerStats.php   ~~
 ~~./Player/GetPlayerAvatar.php~~  
 ~~./Player/CheckLogin.php~~  
 ~~./Player/GetTopPlayers.php~~  

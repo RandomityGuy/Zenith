@@ -426,6 +426,27 @@ export class PQServer {
 		return Player.getPlayerProfileInfo(user);
 	}
 
+	@route("/api/Player/GetPlayerStats.php", ["GET", "POST"])
+	getPlayerStats(req: WebRequest) {
+		let targetUser = "";
+		if (!req.searchParams.has("username"))
+			return "ARGUMENT username";
+		else {
+			targetUser = req.searchParams.get("username");
+		}
+		if (!req.searchParams.has("key"))
+			return "ARGUMENT key";
+		if (req.searchParams.has("user"))
+			targetUser = req.searchParams.get("user");
+		
+		let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+		if (userId === null)
+			return "FAILURE NEEDLOGIN";
+		
+		let statData = Player.getPlayerStats(targetUser);
+		return statData;
+	}
+
 	@route("/api/Player/GetPlayerAchievements.php", ["GET", "POST"])
 	getPlayerAchievements(req: WebRequest) {
 		let targetUser = "";
