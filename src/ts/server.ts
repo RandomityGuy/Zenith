@@ -477,6 +477,39 @@ export class PQServer {
 		return obj;
 	}
 
+	// MULTIPLAYER
+	@route("/api/Multiplayer/VerifyPlayer.php", ["GET", "POST"])
+	verifyPlayer(req: WebRequest) {
+		if (!req.searchParams.has("username"))
+			return "ARGUMENT username";
+		if (!req.searchParams.has("key"))
+			return "ARGUMENT key";
+		if (!req.searchParams.has("session"))
+			return "ARGUMENT session";
+		let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+		if (userId === null)
+			return {
+				verification: "FAIL"
+			}
+		
+		let session = req.searchParams.get("session");
+		if (this.webchatServer.verifyPlayerSession(req.searchParams.get("username"), req.searchParams.get("session"))) {
+			let data = Storage.query("SELECT rating_mp, name, username, id FROM user_ratings, users WHERE user_ratings.user_id = users.id AND users.id = @userId;").get({ userId: userId });
+			let obj = {
+				id: data.id,
+				username: data.username,
+				display: data.name,
+				rating: data.rating_mp,
+				verification: "SUCCESS"
+			}
+			return obj;
+		} else {
+			return {
+				verification: "BADSESSION"
+			};
+		}
+	}
+
 	// CHAT
 	@route("/api/Chat/GetFlairBitmap.php", ["GET", "POST"])
 	getFlairBitmap(req: WebRequest) {

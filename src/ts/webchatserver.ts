@@ -97,4 +97,12 @@ export class WebchatServer {
 			player.session = parts[1];
 		}
 	}
+
+	verifyPlayerSession(username: string, session: string) {
+		for (let client of this.clients) {
+			if (client.username === username && client.session === session)
+				return true;
+		}
+		return false;
+	}
 }

@@ -4,7 +4,7 @@ import { Storage } from "./storage"
 export class Marble {
 
 	static getMarbleList() {		
-		let marbleList = Storage.query("SELECT id, category_id, name, shape_file AS shapeFile, shaderF, shaderV, skin FROM marbles WHERE disabled=0 ORDER BY sort ASC;").all();
+		let marbleList = Storage.query("SELECT id, category_id, name, shape_file, shaderF, shaderV, skin FROM marbles WHERE disabled=0 ORDER BY sort ASC;").all();
 		let marbleCategories = Storage.query("SELECT file_base, id, name FROM marble_categories WHERE disabled=0;").all();
 		return {
 			Marbles: marbleList,
