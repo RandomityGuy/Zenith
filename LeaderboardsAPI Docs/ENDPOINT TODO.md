@@ -25,7 +25,7 @@
 ~~./Server/GetServerVersion.php~~  
 
 ### Mission
-./Mission/RateMission.php  
+~~./Mission/RateMission.php~~  
 ~~./Mission/GetMissionList.php~~  
 
 ### Score
@@ -41,7 +41,7 @@
 ./Replay/RecordReplay.php  
 
 ### Event
-./Event/RecordEventTrigger.php  
+~~./Event/RecordEventTrigger.php~~  
 
 ### Multiplayer
 ./Multiplayer/RecordMatch.php  

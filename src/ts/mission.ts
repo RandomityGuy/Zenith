@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { Storage } from './storage'
 export class Mission {
 
@@ -43,5 +44,38 @@ export class Mission {
 			games: gameList
 		}
 		return ret;
+	}
+
+	// Gets the mission id given the identification parameters, if the mission doesnt exist in the database, it will be created and the missionId of that new record is returned
+	static getMissionId(missionFile: string, missionName: string, missionHash: string, missionGameMode: string, difficultyId: number): number | null {
+		console.log(`${missionFile} ${missionName} ${missionHash} ${missionGameMode} ${difficultyId}`);
+		
+		//let q = Storage.query("SELECT id FROM missions WHERE name=@missionName AND file=@missionFile AND hash=@missionHash AND gamemode=@missionGameMode AND difficulty_id=@difficultyId").get({ missionName: missionName, missionFile: missionFile, missionHash: missionHash, missionGameMode: missionGameMode, difficultyId: difficultyId });
+		// TODO: FIX THIS TO USE HASH WHEN WE HAVE A HASH FUNCTION IN PQ
+		let q = Storage.query("SELECT id FROM missions WHERE name=@missionName AND file=@missionFile AND gamemode=@missionGameMode AND difficulty_id=@difficultyId").get({ missionName: missionName, missionFile: missionFile, missionGameMode: missionGameMode, difficultyId: difficultyId });
+		if (q === undefined) {
+			// First we need to get the game id from the difficultyId cause ugh
+			let gameId = Storage.query("SELECT game_id FROM mission_difficulties WHERE id=@difficultyId").get({ difficultyId: difficultyId });
+			if (gameId === undefined) {
+				return null; // Yeah we failed
+			} else {
+				gameId = Number.parseInt(gameId.game_id);
+			}
+			// Now insert
+			let insertquery = Storage.query(`INSERT INTO missions(game_id, difficulty_id, file, basename, name, gamemode, sort_index, is_custom, hash, modification) VALUES (@gameId, @difficultyId, @file, @baseName, @name, @gameMode, '1', '1', @hash, '');`);
+			let res = insertquery.run({ gameId: gameId, difficultyId: difficultyId, file: missionFile, baseName: path.basename(missionFile), name: missionName, gameMode: missionGameMode, hash: missionHash });
+			if (res.changes === 0) {
+				return null; // Woops
+			} else {
+				return this.getMissionId(missionFile, missionName, missionHash, missionGameMode, difficultyId); // Yeah just run the thing again
+			}
+		} else {
+			return q.id;
+		}
+	}
+
+	static rateMission(userId: number, missionId: number, rating: number) {
+		let res = Storage.query("REPLACE INTO user_mission_ratings(user_id,mission_id,rating) VALUES(@userId,@missionId@rating);").run({ userId: userId, missionId: missionId, rating: rating });
+		return (res.changes > 0);
 	}
 }

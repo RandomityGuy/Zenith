@@ -29,7 +29,7 @@ class WebRequest {
 			if (request.headers['content-type'] === 'application/x-www-form-urlencoded') {
 				// Yeah now we parse the query string
 				if (data !== null) {
-					let qstr = data.split('&').map(x => x.split('=').map(y => decodeURIComponent(y)));
+					let qstr = data.split('&').map(x => x.split('=').map(y => decodeURIComponent(y).replace(/\+/g,' ')));
 					qstr.forEach(x => {
 						if (this.searchParams.has(x[0])) {
 							this.searchParams.append(x[0], x[1])
@@ -347,32 +347,36 @@ export class PQServer {
 			return "ARGUMENT username";
 		if (!req.searchParams.has("key"))
 			return "ARGUMENT key";
-		if (!req.searchParams.has("missionId"))
-			return "ARGUMENT missionId";
 		let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
 		if (userId === null)
 			return "FAILURE NEEDLOGIN";
 		
-		let scoreData = Score.getPersonalTopScores(userId, Number.parseInt(req.searchParams.get('missionId')), 0);
+		let missionId = this.getMissionId(req);
+		if (typeof missionId === "string")
+			return missionId; // Throw the error message
+		
+		let scoreData = Score.getPersonalTopScores(userId, missionId, 0);
 		return scoreData;
 	}
 
 	@route("/api/Score/GetGlobalScores.php", ["GET", "POST"])
 	@route("/api/Score/GetGlobalTopScores.php", ["GET", "POST"])
 	getGlobalTopScores(req: WebRequest) {
-		if (!req.searchParams.has("missionId"))
-			return "ARGUMENT missionId";
+		let missionId = this.getMissionId(req);
+		if (typeof missionId === "string")
+			return missionId; // Throw the error message
 		
-		let scoreData = Score.getGlobalTopScores(Number.parseInt(req.searchParams.get('missionId')), 0);
+		let scoreData = Score.getGlobalTopScores(missionId, 0);
 		return scoreData;
 	}
 
 	@route("/api/Score/GetTopScoreModes.php", ["GET", "POST"])
 	getTopScoreModes(req: WebRequest) {
-		if (!req.searchParams.has("missionId"))
-			return "ARGUMENT missionId";
+		let missionId = this.getMissionId(req);
+		if (typeof missionId === "string")
+			return missionId; // Throw the error message
 		
-		let modeData = Score.getTopScoreModes(Number.parseInt(req.searchParams.get('missionId')));
+		let modeData = Score.getTopScoreModes(missionId);
 		return modeData;
 	}
 
@@ -477,6 +481,29 @@ export class PQServer {
 		return obj;
 	}
 
+	@route("/api/Mission/rateMission.php", ["GET", "POST"])
+	rateMission(req: WebRequest) {
+		if (!req.searchParams.has("username"))
+			return "ARGUMENT username";
+		if (!req.searchParams.has("key"))
+			return "ARGUMENT key";
+		if (!req.searchParams.has("rating"))
+			return "ARGUMENT rating";
+		
+		let missionId = this.getMissionId(req);
+		if (typeof missionId === "string")
+			return missionId; // Throw the error message
+		
+		
+		let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+		if (userId === null)
+			return "FAILURE NEEDLOGIN";
+		
+		
+		let obj = Mission.rateMission(userId, missionId, Number.parseInt(req.searchParams.get("rating")));
+		return obj;
+	}
+
 	// MULTIPLAYER
 	@route("/api/Multiplayer/VerifyPlayer.php", ["GET", "POST"])
 	verifyPlayer(req: WebRequest) {
@@ -528,6 +555,35 @@ export class PQServer {
 		}
 	}
 
+	// EVENT
+	@route("/api/Event/RecordEventTrigger.php", ["GET", "POST"])
+	recordEventTrigger(req: WebRequest) {
+		if (!req.searchParams.has("username"))
+			return "ARGUMENT username";
+		if (!req.searchParams.has("key"))
+			return "ARGUMENT key";
+		if (!req.searchParams.has("trigger"))
+			return "ARGUMENT trigger";
+		
+		let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+		if (userId === null)
+			return "FAILURE NEEDLOGIN";
+		
+		let trigger = Number.parseInt(req.searchParams.get("trigger"));
+		
+		// Yeah so idk how all of this works, its just a big gamble. Lets get a count of times the trigger was triggered
+
+		let triggerCount = Storage.query('SELECT COUNT(*) AS triggerCount FROM user_event_triggers WHERE user_id=@userId AND "trigger"=@trigger;').get({ userId: userId, trigger: trigger });
+		triggerCount = triggerCount.triggerCount;
+
+		
+		Storage.query("INSERT INTO user_event_triggers VALUES(@userId,@trigger,DATETIME('now','localtime'));").run({ userId: userId, trigger: trigger });
+		
+		let obj = triggerCount;
+		return obj;
+	}
+
+
 	// METRICS
 	@route("/api/Player/RecordMetrics.php", ["GET", "POST"])
 	@route("/api/Metrics/RecordGraphicsMetrics.php", ["GET", "POST"])
@@ -553,6 +609,28 @@ export class PQServer {
 		Storage.query("INSERT INTO metrics(user_id,metrics) VALUES(@userId,@metrics);").run({ userId: userId, metrics: metricsString });
 		
 		return "SUCCESS";
+	}
+
+	// Helper function to retrieve mission ids
+	getMissionId(req: WebRequest) {
+		let hasMissionId = req.searchParams.has("missionId");
+		if (hasMissionId) {
+			return Number.parseInt(req.searchParams.get("missionId"));
+		} else {
+			// Yeah now we do the alternate thing for custom missions
+			if (!req.searchParams.has("missionFile"))
+				return "ARGUMENT missionFile";
+			if (!req.searchParams.has("missionName"))
+				return "ARGUMENT missionName";
+			if (!req.searchParams.has("missionHash"))
+				return "ARGUMENT missionHash";
+			if (!req.searchParams.has("missionGamemode"))
+				return "ARGUMENT missionGamemode";
+			if (!req.searchParams.has("difficultyId"))
+				return "ARGUMENT difficultyId";
+			
+			return Mission.getMissionId(req.searchParams.get("missionFile"), decodeURIComponent(req.searchParams.get("missionName")).replace(/\+/g,' '), req.searchParams.get("missionHash"), req.searchParams.get("missionGamemode"), Number.parseInt(req.searchParams.get("difficultyId")));
+		}
 	}
 
 	@route("/")
