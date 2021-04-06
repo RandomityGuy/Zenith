@@ -50,9 +50,8 @@ export class Mission {
 	static getMissionId(missionFile: string, missionName: string, missionHash: string, missionGameMode: string, difficultyId: number): number | null {
 		console.log(`${missionFile} ${missionName} ${missionHash} ${missionGameMode} ${difficultyId}`);
 		
-		//let q = Storage.query("SELECT id FROM missions WHERE name=@missionName AND file=@missionFile AND hash=@missionHash AND gamemode=@missionGameMode AND difficulty_id=@difficultyId").get({ missionName: missionName, missionFile: missionFile, missionHash: missionHash, missionGameMode: missionGameMode, difficultyId: difficultyId });
-		// TODO: FIX THIS TO USE HASH WHEN WE HAVE A HASH FUNCTION IN PQ
-		let q = Storage.query("SELECT id FROM missions WHERE name=@missionName AND file=@missionFile AND gamemode=@missionGameMode AND difficulty_id=@difficultyId").get({ missionName: missionName, missionFile: missionFile, missionGameMode: missionGameMode, difficultyId: difficultyId });
+		let q = Storage.query("SELECT id FROM missions WHERE name=@missionName AND file=@missionFile AND hash=@missionHash AND gamemode=@missionGameMode AND difficulty_id=@difficultyId").get({ missionName: missionName, missionFile: missionFile, missionHash: missionHash, missionGameMode: missionGameMode, difficultyId: difficultyId });
+		//let q = Storage.query("SELECT id FROM missions WHERE name=@missionName AND file=@missionFile AND gamemode=@missionGameMode AND difficulty_id=@difficultyId").get({ missionName: missionName, missionFile: missionFile, missionGameMode: missionGameMode, difficultyId: difficultyId });
 		if (q === undefined) {
 			// First we need to get the game id from the difficultyId cause ugh
 			let gameId = Storage.query("SELECT game_id FROM mission_difficulties WHERE id=@difficultyId").get({ difficultyId: difficultyId });

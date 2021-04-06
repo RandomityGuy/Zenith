@@ -12,6 +12,7 @@ import { Mission } from './mission';
 import { Egg } from './egg';
 import { Score } from './score';
 import { Achievement } from './achievement';
+import { Replay } from './replay';
 
 // A class to store incoming web request data
 class WebRequest {
@@ -583,6 +584,54 @@ export class PQServer {
 		return obj;
 	}
 
+	// REPLAY
+	@route("/api/Replay/GetReplay.php", ["GET", "POST"])
+	getReplay(req: WebRequest) {
+		if (!req.searchParams.has("username"))
+			return "ARGUMENT username";
+		if (!req.searchParams.has("key"))
+			return "ARGUMENT key";
+		
+		let replayType: "Replay" | "Egg" = "Replay";
+		if (req.searchParams.has("type"))
+			replayType = req.searchParams.get("type") === "Egg" ? "Egg" : "Replay";
+		
+		let missionId = this.getMissionId(req);
+		if (typeof missionId === "string")
+			return missionId; // Throw the error message
+		
+		let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+		if (userId === null)
+			return "FAILURE NEEDLOGIN";
+		
+		let obj = Replay.getReplay(missionId, replayType);
+		return obj;
+	}
+
+	@route("/api/Replay/RecordReplay.php", ["GET", "POST"])
+	recordReplay(req: WebRequest) {
+		if (!req.searchParams.has("username"))
+			return "ARGUMENT username";
+		if (!req.searchParams.has("key"))
+			return "ARGUMENT key";
+		if (!req.searchParams.get("conts"))
+			return "ARGUMENT conts";
+		
+		let replayType: "Replay" | "Egg" = "Replay";
+		if (req.searchParams.has("type"))
+			replayType = req.searchParams.get("type") === "Egg" ? "Egg" : "Replay";
+		
+		let missionId = this.getMissionId(req);
+		if (typeof missionId === "string")
+			return missionId; // Throw the error message
+		
+		let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+		if (userId === null)
+			return "FAILURE NEEDLOGIN";
+		
+		let obj = Replay.recordReplay(missionId, replayType, req.searchParams.get("conts"));
+		return obj;
+	}
 
 	// METRICS
 	@route("/api/Player/RecordMetrics.php", ["GET", "POST"])
