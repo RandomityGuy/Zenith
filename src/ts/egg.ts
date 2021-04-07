@@ -12,4 +12,25 @@ export class Egg {
 		let jobj = Object.fromEntries(eggDict);
 		return jobj;
 	}
+
+	static recordEgg(userId: number, missionId: number, time: number) {
+		// First lets get the lowest score
+		let minTime = Storage.query('SELECT MIN("time") AS minTime FROM user_eggs WHERE mission_id = @missionId;').get({ missionId: missionId });
+		if (minTime === undefined) {
+			minTime = Infinity
+		} else {
+			minTime = minTime.minTime;
+		}
+
+		// Insert our score
+		let res = Storage.query(`INSERT INTO user_eggs(user_id,mission_id,time,timestamp) VALUES(@userId,@missionId,@time,DATETIME('now','localtime'));`).run({ userId: userId, missionId: missionId, time: time });
+		if (res.changes === 0) {
+			return "FAILURE";
+		} else {
+			if (minTime > time)
+				return "RECORDING";
+			else
+				return "SUCCESS";
+		}
+	}
 }

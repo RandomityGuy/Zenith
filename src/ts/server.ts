@@ -269,7 +269,28 @@ export class PQServer {
 			let obj = Egg.getEasterEggs(userId);
 			return obj;
 		}
-	}	
+	}
+
+	@route("/api/Egg/RecordEgg.php", ["GET", "POST"])
+	recordEgg(req: WebRequest) {
+		if (!req.searchParams.has("username"))
+			return "ARGUMENT username";
+		if (!req.searchParams.has("key"))
+			return "ARGUMENT key";
+		if (!req.searchParams.has("time"))
+			return "ARGUMENT time";
+		
+		let missionId = this.getMissionId(req);
+		if (typeof missionId === "string")
+			return missionId; // Throw the error message
+		
+		let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+		if (userId === null) {
+			return "FAILURE NEEDLOGIN";
+		}
+		let obj = Egg.recordEgg(userId, missionId, Number.parseInt(req.searchParams.get("time")));
+		return obj;
+	}
 
 	// MARBLE
 	@route("/api/Marble/GetMarbleList.php", ["GET", "POST"])
@@ -482,7 +503,7 @@ export class PQServer {
 		return obj;
 	}
 
-	@route("/api/Mission/rateMission.php", ["GET", "POST"])
+	@route("/api/Mission/RateMission.php", ["GET", "POST"])
 	rateMission(req: WebRequest) {
 		if (!req.searchParams.has("username"))
 			return "ARGUMENT username";

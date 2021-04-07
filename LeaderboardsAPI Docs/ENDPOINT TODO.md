@@ -9,7 +9,7 @@
 ~~./Marble/RecordMarbleSelection.php~~  
 
 ### Egg:
-./Egg/RecordEgg.php  
+~~./Egg/RecordEgg.php~~  
 ~~./Egg/GetEasterEggs.php~~  
 
 ### Achievement
@@ -37,8 +37,8 @@
 ~~./Score/GetGlobalScores.php~~  
 
 ### Replay
-./Replay/GetReplay.php  
-./Replay/RecordReplay.php  
+~~./Replay/GetReplay.php~~  
+~~./Replay/RecordReplay.php~~  
 
 ### Event
 ~~./Event/RecordEventTrigger.php~~  
