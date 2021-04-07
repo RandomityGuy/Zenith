@@ -112,9 +112,11 @@ export class PQServer {
 	// Makes the response valid for pq to read
 	tryPQify(resp: WebResponse, params: WebRequest) {
 		if (params.searchParams.has("req")) {
-			let reqid = params.searchParams.get("req");
-			resp.response = `pq ${reqid} ${resp.response}`;
-			resp.headers.set("Content-Type", "text/plain");
+			if (!resp.response.startsWith("pq")) { // Don't try to PQify whats already PQified
+				let reqid = params.searchParams.get("req");
+				resp.response = `pq ${reqid} ${resp.response}`;
+				resp.headers.set("Content-Type", "text/plain");
+			}
 			return resp;
 		};
 		return resp;
@@ -392,6 +394,53 @@ export class PQServer {
 		return scoreData;
 	}
 
+	@route("/api/Score/RecordScore.php", ["GET", "POST"])
+	recordScore(req: WebRequest) {
+		if (!req.searchParams.has("username"))
+			return "ARGUMENT username";
+		if (!req.searchParams.has("key"))
+			return "ARGUMENT key";
+		if (!req.searchParams.has("modifiers"))
+			return "ARGUMENT modifiers";
+		if (!req.searchParams.has("score"))
+			return "ARGUMENT score";
+		if (!req.searchParams.has("scoreType"))
+			return "ARGUMENT scoreType";
+		if (!req.searchParams.has("totalBonus"))
+			return "ARGUMENT totalBonus";
+		if (!req.searchParams.has("gemCount"))
+			return "ARGUMENT gemCount";
+		if (!req.searchParams.has("gems1"))
+			return "ARGUMENT gems1";
+		if (!req.searchParams.has("gems2"))
+			return "ARGUMENT gems2";
+		if (!req.searchParams.has("gems5"))
+			return "ARGUMENT gems5";
+		if (!req.searchParams.has("gems10"))
+			return "ARGUMENT gems10";
+		
+		let missionId = this.getMissionId(req);
+		if (typeof missionId === "string")
+			return missionId; // Throw the error message
+		
+		let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+		if (userId === null)
+			return "FAILURE NEEDLOGIN";
+		
+		let results = Score.recordScore(userId, missionId, Number.parseInt(req.searchParams.get("score")), req.searchParams.get("scoreType"), Number.parseInt(req.searchParams.get("modifiers")), Number.parseInt(req.searchParams.get("totalBonus")), Number.parseInt(req.searchParams.get("gemCount")), Number.parseInt(req.searchParams.get("gems1")), Number.parseInt(req.searchParams.get("gems2")), Number.parseInt(req.searchParams.get("gems5")), Number.parseInt(req.searchParams.get("gems10")));
+
+		// Generate our custom result data
+		let obj = [] as string[];
+		results.forEach(x => {
+			let rsp = this.response(x, req);
+			obj.push(rsp.response);
+		});
+		let retObj = obj.join('\n');
+		let response = this.response(retObj, req);
+		response.response = retObj;
+		return response;
+	}
+
 	@route("/api/Score/GetTopScoreModes.php", ["GET", "POST"])
 	getTopScoreModes(req: WebRequest) {
 		let missionId = this.getMissionId(req);
@@ -401,7 +450,6 @@ export class PQServer {
 		let modeData = Score.getTopScoreModes(missionId);
 		return modeData;
 	}
-
 
 	// PLAYER
 	@route("/api/Player/RegisterUser.php", ["GET", "POST"])

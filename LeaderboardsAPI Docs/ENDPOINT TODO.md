@@ -32,7 +32,7 @@
 ~~./Score/GetPersonalTopScores.php~~  
 ~~./Score/GetPersonalTopScoreList.php~~  
 ~~./Score/GetGlobalTopScores.php~~  
-./Score/RecordScore.php  
+~~./Score/RecordScore.php~~  
 ~~./Score/GetTopScoreModes.php~~  
 ~~./Score/GetGlobalScores.php~~  
 

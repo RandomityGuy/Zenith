@@ -294,10 +294,10 @@ Response
 | 200 | CUSTOM FORMAT |
 
 Response Format:  
-pq \<req\> SUCCES or FAILURE \<rating\> // Whether the score was successfully recorded or not 
+pq \<req\> SUCCESS or FAILURE \<rating\> // Whether the score was successfully recorded or not  
 pq \<req\> RATING \<rating\> // The rating given by the mission.  
-pq \<req\> NEWRATING \<rating\> // The new overall rating
-pq \<req\> POSITION \<rating\> // The rank on the mission
+pq \<req\> NEWRATING \<rating\> // The new overall rating  
+pq \<req\> POSITION \<rating\> // The rank on the mission  
 pq \<req\> DELTA \<rating\> // The difference in your top rating with the rating above.  
-pq \<req\> RECORDING // Is only present when the score is a WR, triggers RREC upload
-pq \<req\> ACHIEVEMENT \<achievement-id\> // Is only present when the score grants an achievement
+pq \<req\> RECORDING // Is only present when the score is a WR, triggers RREC upload  
+pq \<req\> ACHIEVEMENT \<achievement-id\> // Is only present when the score grants an achievement  
