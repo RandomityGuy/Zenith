@@ -54,11 +54,11 @@ export class WebchatInfo {
 	}
 
 	welcome(message: string) {
-		this.text.push(`INFO WELCOME ${message}`);
+		this.text.push(`INFO WELCOME ${message.replace(/\n/g,"\\n")}`);
 	}
 
 	defaultHSName(name: string) {
-		this.text.push(`INFO DEFAULT ${name}`);
+		this.text.push(`INFO DEFAULT ${WebchatResponse.encodeName(name)}`);
 	}
 
 	address(ip: string) {
@@ -66,17 +66,17 @@ export class WebchatInfo {
 	}
 
 	help(info: string, cmdlist: string) {
-		this.text.push(`INFO HELP INFO ${info}`);
-		this.text.push(`INFO HELP CMDLIST ${cmdlist}`);
+		this.text.push(`INFO HELP INFO ${info.replace(/\n/g,"\\n")}`);
+		this.text.push(`INFO HELP CMDLIST ${cmdlist.replace(/\n/g,"\\n")}`);
 	}
 
 	canChat(chat: boolean) {
 		this.canchat = chat;
+		this.text.push(`CANCHAT ${this.canchat}`);
 	}
 
 	getResult() {
 		let res = [...this.text];
-		res.push(`CANCHAT ${this.canChat}`);
 		return res;
 	}
 }
@@ -97,7 +97,7 @@ export class WebchatResponse {
 		if (banreason === null)
 			this.text.push(`IDENTIFY ${status}`);
 		else
-			this.text.push(`IDENTIFY ${status} ${banreason}`);
+			this.text.push(`IDENTIFY ${status} ${WebchatResponse.encodeName(banreason)}`);
 	}
 
 	logged() {
@@ -164,11 +164,11 @@ export class WebchatResponse {
 	}
 
 	chat(username: string, displayname: string, destination: string, access: number, message: string) {
-		this.text.push(`CHAT ${username} ${displayname} ${destination} ${access} ${encodeURI(message)}`);
+		this.text.push(`CHAT ${WebchatResponse.encodeName(username)} ${WebchatResponse.encodeName(displayname)} ${WebchatResponse.encodeName(destination)} ${access} ${encodeURI(message)}`);
 	}
 
 	notify(type: "login" | "logout" | "setlocation" | "kick" | "levelup" | "mastery" | "taskcomplete" | "achievement" | "prestigeup" | "record" | "recordscore", username: string, displayname: string, data: string[]) {
-		this.text.push(`NOTIFY ${type} ${username} ${displayname} ${data.join(' ')}`);
+		this.text.push(`NOTIFY -1 ${type} ${WebchatResponse.encodeName(username)} ${WebchatResponse.encodeName(displayname)} ${data.join(' ')}`);
 	}
 
 	shutdown() {
@@ -223,7 +223,7 @@ export class WebchatResponse {
 		if (this.friendList.length !== 0) {
 			result.push("FRIEND START");
 			this.friendList.forEach(x => {
-				result.push(`FRIEND NAME ${x.username} ${x.displayname}`);
+				result.push(`FRIEND NAME ${WebchatResponse.encodeName(x.username)} ${WebchatResponse.encodeName(x.displayname)}`);
 			})
 			result.push("FRIEND DONE");
 		}
@@ -232,7 +232,7 @@ export class WebchatResponse {
 		if (this.blockList.length !== 0) {
 			result.push("BLOCK START");
 			this.blockList.forEach(x => {
-				result.push(`BLOCK NAME ${x.username} ${x.displayname}`);
+				result.push(`BLOCK NAME ${WebchatResponse.encodeName(x.username)} ${WebchatResponse.encodeName(x.displayname)}`);
 			})
 			result.push("BLOCK DONE");
 		}
@@ -244,14 +244,26 @@ export class WebchatResponse {
 		if (this.userList.length !== 0) {
 			result.push("USER START");
 			this.userGroupList.forEach(x => {
-				result.push(`USER GROUP ${x.access} ${x.order} ${x.display} ${x.altDisplay}`);
+				result.push(`USER GROUP ${x.access} ${x.order} ${WebchatResponse.encodeName(x.display)} ${WebchatResponse.encodeName(x.altDisplay)}`);
 			})
 			this.userList.forEach(x => {
-				result.push(`USER INFO ${x.username} ${x.access} ${x.statusId} ${x.displayname} ${x.color} ${x.flair} ${x.prefix} ${x.suffix}`);
+				result.push(`USER INFO ${WebchatResponse.encodeName(x.username)} ${x.access} ${x.statusId} ${WebchatResponse.encodeName(x.displayname)} ${x.color} ${x.flair} ${WebchatResponse.encodeName(x.prefix)} ${WebchatResponse.encodeName(x.suffix)}`);
 			})
 			result.push("USER DONE");
 		}
 
 		return result;
+	}
+
+	static encodeName(name: string) {
+		if (name === null)
+			return "";
+		return name.replace(" ", "-SPC-").replace("\n", "-NL-").replace("\t", "-TAB-");
+	}
+
+	static decodeName(name: string) {
+		if (name === null)
+			return "";
+		return name.replace("-SPC-", " ").replace("-NL-", "\n").replace("-TAB-", "\t");
 	}
 }

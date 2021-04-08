@@ -1,19 +1,31 @@
 import * as net from "net"
 import { Player } from "./player";
 import { Storage } from "./storage"
-import { WebchatResponse } from "./webchat";
+import { WebchatInfo, WebchatResponse, WebchatUser } from "./webchat";
 
 class WebchatPlayer {
 	socket: net.Socket;
 	session: string;
+
+	userId: number;
 	username: string;
 	display: string;
+	accessLevel: number = 0;
 	gameVersion: number;
+
+	pingTime: number;
+	pingInitial: number;
+
+	status: number = 0;
 
 	rawReceivedData: string = "";
 
 	constructor(socket: net.Socket) {
 		this.socket = socket;
+	}
+
+	send(response: WebchatResponse) {
+		response.getResult().forEach(x => this.socket.write(x + "\n"));
 	}
 }
 
@@ -70,7 +82,8 @@ export class WebchatServer {
 
 		if (command === "IDENTIFY") {
 			player.username = parts[1];
-		};
+		}
+
 		if (command === "VERIFY") {
 			player.gameVersion = Number.parseInt(parts[1]);
 			let pwd = parts[2];
@@ -81,7 +94,48 @@ export class WebchatServer {
 				response.identify("OUTOFDATE");
 			}
 			if (authdata.success) {
+				player.userId = authdata.id;
+				player.accessLevel = authdata.access;
+				player.display = authdata.display;
+
 				response.identify("SUCCESS");
+				let responseInfo = new WebchatInfo();
+				responseInfo.access(authdata.access);
+				responseInfo.displayName(authdata.display);
+				responseInfo.servertime(new Date().getTime());
+				responseInfo.welcome(Storage.settings.welcome);
+				responseInfo.defaultHSName(Storage.settings.default_name);
+				responseInfo.address(player.socket.remoteAddress);
+				responseInfo.help(Storage.settings.chat_help_info, Storage.settings.chat_help_cmdlist);
+				responseInfo.privelege(authdata.access);
+				response.info(responseInfo);
+
+				// The friend list
+				let friendlist = Player.getFriendsList(authdata.id);
+				friendlist.forEach(x => {
+					response.addFriend(x.username, x.name);
+				})
+
+				// The block list
+				let blocklist = Player.getBlockList(authdata.id);
+				blocklist.forEach(x => {
+					response.addBlock(x.username, x.name);
+				})
+
+				// Chat statuses
+				Storage.settings.chat_statuses.forEach((x,idx) => {
+					response.status(idx, x);
+				})
+
+				// The list of available chat colours
+				Storage.settings.chat_colors.forEach(x => {
+					response.color(x.key, x.value)
+				})
+
+				// The list of available chat flairs
+				Storage.settings.chat_flairs.forEach(x => {
+					response.flair(x);
+				})
 				response.logged();
 			} else {
 				if (authdata.reason === "username" || authdata.reason === "password") {
@@ -91,11 +145,35 @@ export class WebchatServer {
 					response.identify("BANNED");
 				}
 			}
-			response.getResult().forEach(x => player.socket.write(x + "\n"));
+			player.send(response);
+			if (authdata.success) { // Send player join notification to everyone
+				this.notifyJoin(player);
+			}
 		}
+
 		if (command === "SESSION") {
 			player.session = parts[1];
 		}
+
+		if (command === "PING") {
+			let response = new WebchatResponse();
+			player.pingInitial = new Date().getTime();
+			response.ping(parts[1]);
+			player.send(response);
+		}
+
+		if (command === "PONG") {
+			player.pingTime = new Date().getTime() - player.pingInitial;
+			let response = new WebchatResponse();
+			response.pingtime(player.pingTime);
+			player.send(response);
+		}
+
+		if (command === "LOCATION") {
+			player.status = Number.parseInt(parts[1]);
+			this.notifyUserUpdate();
+		}
+
 	}
 
 	verifyPlayerSession(username: string, session: string) {
@@ -104,5 +182,41 @@ export class WebchatServer {
 				return true;
 		}
 		return false;
+	}
+
+	notifyJoin(player: WebchatPlayer) {
+		let response = new WebchatResponse();
+		this.generateUserList(response);
+
+		response.notify("login", player.username, player.display, []);
+		this.clients.forEach(x => x.send(response));
+	}
+
+	notifyUserUpdate() {
+		let response = new WebchatResponse();
+		this.generateUserList(response);
+		this.clients.forEach(x => x.send(response));
+	}
+
+	generateUserList(response: WebchatResponse) {
+		let groups = [
+			{ access: -3, order: 0, display: "Banned Users", altDisplay: "Banned" },
+			{ access: 0, order: 2, display: "Users", altDisplay: "Member" },
+			{ access: 1, order: 3, display: "Moderators", altDisplay: "Moderator" },
+			{ access: 2, order: 4, display: "Administrators", altDisplay: "Administrator" },
+			{ access: 3, order: 1, display: "Guests", altDisplay: "Guest" },
+			{ access: 4, order: 5, display: "Developers", altDisplay: "Developer" },
+		]
+		groups.forEach(x => response.group(x));
+
+		this.clients.forEach(player => {
+			let titleFlairData = Storage.query("SELECT accessLevel AS access, registerDate, colorValue AS color, donations, id, statusMsg AS status, titleFlair, titlePrefix, titleSuffix, username, name FROM users WHERE id = @userId;").get({ userId: player.userId }); // Taken from player.ts
+			let flair = Number.parseInt(titleFlairData.titleFlair);
+			let flairStr = "";
+			if (Storage.settings.chat_flairs.length > flair) {
+				flairStr = Storage.settings.chat_flairs[flair];
+			}
+			response.userInfo(new WebchatUser(player.username, player.display, player.accessLevel, player.status, titleFlairData.color, flairStr, titleFlairData.titlePrefix, titleFlairData.titleSuffix));
+		})
 	}
 }
