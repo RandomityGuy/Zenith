@@ -97,14 +97,21 @@ export class Score {
 
 	static getGlobalTopScores(missionId: number, modifiers: number = 0) {
 		let scoreData = Storage.query("SELECT gem_count, gems_1_point, gems_2_point, gems_5_point, gems_10_point, user_scores.id, modifiers, users.name, users.username, origin, row_number() OVER (ORDER BY sort) AS placement, rating, score, score_type, timestamp, total_bonus, user_id FROM user_scores, users WHERE mission_id = @missionId AND users.id = user_scores.user_id AND (modifiers & @modifier = @modifier) AND disabled = 0 GROUP BY user_id").all({ missionId: missionId, modifier: modifiers });
-		let columnData = [
+		let spcolumnData = [
 			{ name: "placement", display: "#", type: "place", tab: "1", width: "40" },
 			{ name: "name", display: "Player", type: "string", tab: "40", width: "-190" },
 			{ name: "score", display: "Score", tab: "-145", width: "-75" },
 			{ name: "rating", display: "Rating", type: "score", tab: "0", width: "75" }
 		]
+		let mpcolumnData = [
+			{ name: "placement", display: "#", type: "place", tab: "1", width: "40" },
+			{ name: "name", display: "Player", type: "string", tab: "40", width: "-75" },
+			{ name: "score", display: "Score", tab: "-75", width: "75" },
+		]
+		let gameType = Storage.query("SELECT game_type FROM mission_games, missions WHERE missions.game_id=mission_games.id AND missions.id=@missionId").get({ missionId: missionId });
+		gameType = gameType.game_type;
 		let obj = {
-			columns: columnData,
+			columns: gameType === "Single Player" ? spcolumnData : mpcolumnData,
 			scores: scoreData,
 			missionId: missionId
 		};
