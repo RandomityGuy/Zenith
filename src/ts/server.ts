@@ -13,6 +13,7 @@ import { Egg } from './egg';
 import { Score } from './score';
 import { Achievement } from './achievement';
 import { Replay } from './replay';
+import { MatchScore, MatchTeam, Multiplayer } from './multiplayer';
 
 // A class to store incoming web request data
 class WebRequest {
@@ -605,6 +606,126 @@ export class PQServer {
 				verification: "BADSESSION"
 			};
 		}
+	}
+
+	@route("/api/Multiplayer/RecordMatch.php", ["GET", "POST"])
+	recordMatch(req: WebRequest) {
+		if (!req.searchParams.has("username"))
+			return "ARGUMENT username";
+		if (!req.searchParams.has("key"))
+			return "ARGUMENT key";
+		if (!req.searchParams.has("rating"))
+			return "ARGUMENT rating";
+		if (!req.searchParams.has("players"))
+			return "ARGUMENT players";
+		if (!req.searchParams.has("port"))
+			return "ARGUMENT port";
+		if (!req.searchParams.has("scoreType"))
+			return "ARGUMENT scoreType";
+		if (!req.searchParams.has("totalBonus"))
+			return "ARGUMENT totalBonus"
+		if (!req.searchParams.has("modes"))
+			return "ARGUMENT modes";
+		let teamMode = 0;
+		if (req.searchParams.has("teammode"))
+			teamMode = Number.parseInt(req.searchParams.get("teammode"));
+		if (teamMode) {
+			if (!req.searchParams.has("teams[number][]"))
+				return "ARGUMENT teams[number][]";
+			if (!req.searchParams.has("teams[name][]"))
+				return "ARGUMENT teams[name][]";
+			if (!req.searchParams.has("teams[color][]"))
+				return "ARGUMENT teams[color][]";
+		}
+		if (!req.searchParams.has("scores[username][]"))
+			return "ARGUMENT scores[username][]";
+		if (!req.searchParams.has("scores[score][]"))
+			return "ARGUMENT scores[score][]";
+		if (!req.searchParams.has("scores[place][]"))
+			return "ARGUMENT scores[place][]";
+		if (!req.searchParams.has("scores[host][]"))
+			return "ARGUMENT scores[host][]";
+		if (!req.searchParams.has("scores[guest][]"))
+			return "ARGUMENT scores[guest][]";
+		if (!req.searchParams.has("scores[marble][]"))
+			return "ARGUMENT scores[marble][]";
+		if (!req.searchParams.has("scores[timePercent[]"))
+			return "ARGUMENT scores[timePercent][]";
+		if (!req.searchParams.has("scores[disconnect][]"))
+			return "ARGUMENT scores[disconnect][]";
+		if (!req.searchParams.has("scores[gemCount][]"))
+			return "ARGUMENT scores[gemCount][]";
+		if (!req.searchParams.has("scores[gems1][]"))
+			return "ARGUMENT scores[gems1][]";
+		if (!req.searchParams.has("scores[gems2][]"))
+			return "ARGUMENT scores[gems2][]";
+		if (!req.searchParams.has("scores[gems5][]"))
+			return "ARGUMENT scores[gems5][]";
+		if (!req.searchParams.has("scores[gems10][]"))
+			return "ARGUMENT scores[gems10][]";
+		if (!req.searchParams.has("scores[team][]"))
+			return "ARGUMENT scores[team][]";
+		
+		
+		let missionId = this.getMissionId(req);
+		if (typeof missionId === "string")
+			return missionId; // Throw the error message
+		
+		
+		let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+		if (userId === null)
+			return "FAILURE NEEDLOGIN";
+		
+		let teams = [] as MatchTeam[];
+		if (teamMode) {
+			let teamNumbers = req.searchParams.getAll("teams[number][]");
+			let teamNames = req.searchParams.getAll("teams[name][]");
+			let teamColors = req.searchParams.getAll("teams[color][]");
+
+			for (let i = 0; i < teamNumbers.length; i++) {
+				teams.push({ id: Number.parseInt(teamNumbers[i]), name: teamNames[i], color: teamColors[i] });
+			}
+		}
+		let scoreUsernames = req.searchParams.getAll("scores[username][]");
+		let scoreScores = req.searchParams.getAll("scores[score][]");
+		let scorePlaces = req.searchParams.getAll("scores[place][]");
+		let scoreHosts = req.searchParams.getAll("scores[host][]");
+		let scoreGuests = req.searchParams.getAll("scores[guest][]");
+		let scoreMarbles = req.searchParams.getAll("scores[marble][]");
+		let scoreTimePercents = req.searchParams.getAll("scores[timePercent][]");
+		let scoreDisconnects = req.searchParams.getAll("scores[disconnect][]");
+		let scoreGemCounts = req.searchParams.getAll("scores[gemCount][]");
+		let scoreGems1 = req.searchParams.getAll("scores[gems1][]");
+		let scoreGems2 = req.searchParams.getAll("scores[gems2][]");
+		let scoreGems5 = req.searchParams.getAll("scores[gems5][]");
+		let scoreGems10 = req.searchParams.getAll("scores[gems10][]");
+		let scoreTeams = req.searchParams.getAll("scores[team][]");
+
+		let scoreDatas: MatchScore[] = [];
+
+		for (let i = 0; i < scoreUsernames.length; i++) {
+			let scoreData: MatchScore = {
+				username: scoreUsernames[i],
+				score: Number.parseInt(scoreScores[i]),
+				place: Number.parseInt(scorePlaces[i]),
+				host: Number.parseInt(scoreHosts[i]),
+				guest: Number.parseInt(scoreGuests[i]),
+				marble: Number.parseInt(scoreMarbles[i]),
+				timePercent: Number.parseInt(scoreTimePercents[i]),
+				disconnect: Number.parseInt(scoreDisconnects[i]),
+				gemCount: Number.parseInt(scoreGemCounts[i]),
+				gems1: Number.parseInt(scoreGems1[i]),
+				gems2: Number.parseInt(scoreGems2[i]),
+				gems5: Number.parseInt(scoreGems5[i]),
+				gems10: Number.parseInt(scoreGems10[i]),
+				team: Number.parseInt(scoreTeams[i]),
+			}
+
+			scoreDatas.push(scoreData);
+		}
+
+		let obj = Multiplayer.recordMatch(userId, missionId, req.request.socket.remoteAddress, Number.parseInt(req.searchParams.get("port")), req.searchParams.get("scoreType"), Number.parseInt(req.searchParams.get("totalBonus")), req.searchParams.get("modes"), teams, scoreDatas);
+		return obj;
 	}
 
 	// CHAT
