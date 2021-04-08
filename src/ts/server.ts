@@ -614,8 +614,6 @@ export class PQServer {
 			return "ARGUMENT username";
 		if (!req.searchParams.has("key"))
 			return "ARGUMENT key";
-		if (!req.searchParams.has("rating"))
-			return "ARGUMENT rating";
 		if (!req.searchParams.has("players"))
 			return "ARGUMENT players";
 		if (!req.searchParams.has("port"))
@@ -649,7 +647,7 @@ export class PQServer {
 			return "ARGUMENT scores[guest][]";
 		if (!req.searchParams.has("scores[marble][]"))
 			return "ARGUMENT scores[marble][]";
-		if (!req.searchParams.has("scores[timePercent[]"))
+		if (!req.searchParams.has("scores[timePercent][]"))
 			return "ARGUMENT scores[timePercent][]";
 		if (!req.searchParams.has("scores[disconnect][]"))
 			return "ARGUMENT scores[disconnect][]";
