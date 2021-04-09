@@ -14,12 +14,17 @@ class WebchatPlayer {
 	accessLevel: number = 0;
 	gameVersion: number;
 
+	titlePrefix: string;
+	titleSuffix: string;
+
 	pingTime: number;
 	pingInitial: number;
 
 	status: number = 0;
 
 	rawReceivedData: string = "";
+
+	blockList: Set<string> = new Set<string>();
 
 	constructor(socket: net.Socket) {
 		this.socket = socket;
@@ -99,6 +104,10 @@ export class WebchatServer {
 				player.accessLevel = authdata.access;
 				player.display = authdata.display;
 
+				let titleFlairData = Storage.query("SELECT accessLevel AS access, registerDate, colorValue AS color, donations, id, statusMsg AS status, titleFlair, titlePrefix, titleSuffix, username, name FROM users WHERE id = @userId;").get({ userId: player.userId }); // Taken from player.ts
+				player.titlePrefix = titleFlairData.titlePrefix;
+				player.titleSuffix = titleFlairData.titleSuffix;
+
 				response.identify("SUCCESS");
 				let responseInfo = new WebchatInfo();
 				responseInfo.access(authdata.access);
@@ -121,6 +130,7 @@ export class WebchatServer {
 				let blocklist = Player.getBlockList(authdata.id);
 				blocklist.forEach(x => {
 					response.addBlock(x.username, x.name);
+					player.blockList.add(x.username);
 				})
 
 				// Chat statuses
@@ -180,6 +190,7 @@ export class WebchatServer {
 		if (command === "LOCATION") {
 			player.status = Number.parseInt(parts[1]);
 			this.notifyUserUpdate();
+			this.notifyStatusChange(player);
 		}
 
 		if (command === "FRIEND") {
@@ -237,7 +248,7 @@ export class WebchatServer {
 				this.clients.forEach(x => x.send(response));
 			} else {
 				for (let client of this.clients) {
-					if (client.username === dest || client.display === dest) {
+					if (client.username === dest || client.display === dest && !client.blockList.has(player.username)) {
 						client.send(response);
 					}
 				}
@@ -280,6 +291,16 @@ export class WebchatServer {
 		let response = new WebchatResponse();
 		response.notify("setlocation", player.username, player.display, [player.status.toString()]);
 		this.clients.forEach(x => x.send(response));
+	}
+	
+	getFullDisplayName(player: WebchatPlayer) {
+		let name = "";
+		if (player.titlePrefix !== null && player.titlePrefix !== "")
+			name += player.titlePrefix + " ";
+		name += player.display;
+		if (player.titleSuffix !== null && player.titleSuffix !== "")
+			name += " " + player.titleSuffix;
+		return WebchatResponse.encodeName(name);
 	}
 
 	generateUserList(response: WebchatResponse) {

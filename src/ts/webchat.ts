@@ -168,7 +168,7 @@ export class WebchatResponse {
 	}
 
 	notify(type: "login" | "logout" | "setlocation" | "kick" | "levelup" | "mastery" | "taskcomplete" | "achievement" | "prestigeup" | "record" | "recordscore", username: string, displayname: string, data: string[]) {
-		this.text.push(`NOTIFY -1 ${type} ${WebchatResponse.encodeName(username)} ${WebchatResponse.encodeName(displayname)} ${data.join(' ')}`);
+		this.text.push(`NOTIFY ${type} 0 ${WebchatResponse.encodeName(username)} ${WebchatResponse.encodeName(displayname)} ${data.join(' ')}`);
 	}
 
 	shutdown() {
