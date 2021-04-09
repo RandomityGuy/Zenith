@@ -1,4 +1,5 @@
 import * as net from "net"
+import { isPartiallyEmittedExpression } from "typescript";
 import { Player } from "./player";
 import { Storage } from "./storage"
 import { WebchatInfo, WebchatResponse, WebchatUser } from "./webchat";
@@ -136,6 +137,13 @@ export class WebchatServer {
 				Storage.settings.chat_flairs.forEach(x => {
 					response.flair(x);
 				})
+
+				if (Storage.settings.halloween_event)
+					response.frightfest()
+				
+				if (Storage.settings.winter_event)
+					response.winterfest()
+
 				response.logged();
 			} else {
 				if (authdata.reason === "username" || authdata.reason === "password") {
@@ -174,6 +182,68 @@ export class WebchatServer {
 			this.notifyUserUpdate();
 		}
 
+		if (command === "FRIEND") {
+			let friendId = Player.getUserId(parts[1]);
+			Storage.query("REPLACE INTO user_friends(user_id,friend_id) VALUES (@userId,@friendId);").run({ userId: player.userId, friendId: friendId });
+			let response = new WebchatResponse();
+			response.addFriendSuccess();
+			player.send(response);
+		}
+
+		if (command === "FRIENDDEL") {
+			let friendId = Player.getUserId(parts[1]);
+			Storage.query("DELETE FROM user_friends WHERE user_id = @userId AND friend_id = @friendId);").run({ userId: player.userId, friendId: friendId });
+			let response = new WebchatResponse();
+			response.removeFriendSuccess();
+			player.send(response);
+		}
+
+		if (command === "BLOCK") {
+			let blockId = Player.getUserId(parts[1]);
+			Storage.query("REPLACE INTO user_blocks(user_id,block_id) VALUES (@userId,@blockId);").run({ userId: player.userId, blockId: blockId });
+			let response = new WebchatResponse();
+			response.addBlockSuccess();
+			player.send(response);
+		}
+
+		if (command === "UNBLOCK") {
+			let blockId = Player.getUserId(parts[1]);
+			Storage.query("DELETE FROM user_blocks WHERE user_id = @userId AND block_id = @blockId);").run({ userId: player.userId, blockId: blockId });
+			let response = new WebchatResponse();
+			response.removeBlockSuccess();
+			player.send(response);
+		}
+
+		if (command === "FRIENDLIST") {
+			let response = new WebchatResponse();
+			let friendlist = Player.getFriendsList(player.userId);
+			friendlist.forEach(x => {
+				response.addFriend(x.username, x.name);
+			})
+			player.send(response);
+		}
+
+		if (command === "DISCONNECT") {
+			this.clients.delete(player);
+			player.socket.destroy();
+		}
+
+		if (command === "CHAT") {
+			let dest = parts[1];
+			let conts = parts.slice(2).join(' ');
+			let response = new WebchatResponse();
+			response.chat(player.username, player.display, dest, player.accessLevel, conts);
+			if (dest === "") {
+				this.clients.forEach(x => x.send(response));
+			} else {
+				for (let client of this.clients) {
+					if (client.username === dest || client.display === dest) {
+						client.send(response);
+					}
+				}
+			}
+		}
+
 	}
 
 	verifyPlayerSession(username: string, session: string) {
@@ -192,9 +262,23 @@ export class WebchatServer {
 		this.clients.forEach(x => x.send(response));
 	}
 
+	notifyLeave(player: WebchatPlayer) {
+		let response = new WebchatResponse();
+		this.generateUserList(response);
+
+		response.notify("logout", player.username, player.display, []);
+		this.clients.forEach(x => x.send(response));
+	}
+
 	notifyUserUpdate() {
 		let response = new WebchatResponse();
 		this.generateUserList(response);
+		this.clients.forEach(x => x.send(response));
+	}
+
+	notifyStatusChange(player: WebchatPlayer) {
+		let response = new WebchatResponse();
+		response.notify("setlocation", player.username, player.display, [player.status.toString()]);
 		this.clients.forEach(x => x.send(response));
 	}
 
