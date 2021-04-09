@@ -158,18 +158,31 @@ export class Score {
 	static recordScore(userId: number, missionId: number, score: number, scoreType: string, modifiers: number, totalBonus: number, gemCount: number, gems1: number, gems2: number, gems5: number, gems10: number) {
 		// First get the best score of yours and the top score
 		let personalTopScore = Storage.query("SELECT * FROM user_scores WHERE user_id = @userId AND mission_id = @missionId AND user_scores.disabled = 0 ORDER BY sort;").get({ userId: userId, missionId: missionId });
+		if (personalTopScore === undefined) {
+			personalTopScore = {
+				rating: 0
+			}
+		}
 		let globaltopScore = Storage.query("SELECT row_number() OVER (ORDER BY sort) AS placement, score, sort FROM user_scores, users WHERE mission_id = @missionId AND users.id = user_scores.user_id AND (modifiers & @modifier = @modifier) AND disabled = 0 GROUP BY user_id").get({ missionId: missionId, modifier: 0 });
-
+		if (globaltopScore === undefined) {
+			globaltopScore = {
+				placement: 0,
+				score: 1000000,
+				sort: 10000000,
+			}
+		}
 		let mission = Storage.query("SELECT * FROM missions WHERE id=@missionId;").get({ missionId: missionId });
 		let missionRatingInfo = Storage.query("SELECT * FROM mission_rating_info WHERE mission_id=@missionId;").get({ missionId: missionId }) as RatingInfo;
 		// Now calculate our ratings
 		let rating = Score.getRating(score, mission.gamemode, missionRatingInfo, modifiers);
 
+		console.log(rating);
 		// Now delta rating
 		let topRating = Number.parseInt(personalTopScore.rating)
+		console.log(topRating);
 		let deltaRating: number;
 		if (rating > topRating) {
-			deltaRating = topRating - rating;
+			deltaRating = rating - topRating;
 		} else {
 			deltaRating = 0;
 		}
@@ -183,10 +196,12 @@ export class Score {
 			isWR = true;
 		}
 
+		console.log(deltaRating);
+
 		// Now update our net ratings
 		if (deltaRating > 0) {
 			// Get the rating column
-			let ratingColumn = Storage.query("SELECT rating_column FROM mission_games, missions WHERE missions.id=@missionId, game_id=mission_games.id;").get({ missionId: missionId });
+			let ratingColumn = Storage.query("SELECT rating_column FROM mission_games, missions WHERE missions.id=@missionId AND game_id=mission_games.id;").get({ missionId: missionId });
 			ratingColumn = ratingColumn.rating_column;
 
 			// Now update

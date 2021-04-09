@@ -6,3 +6,4 @@ generate_md.py
 .vscode
 *.db-shm
 *.db-wal
+src/storage/replays/*.rrec

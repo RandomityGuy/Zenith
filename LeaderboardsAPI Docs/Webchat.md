@@ -158,7 +158,7 @@ Sets the game theme to frightfest.
 ### USER <data>
 The following are valid values for data:  
 ```START```: Marks the start of user data.  
-```GROUP <access: int> <sort-order: int> <name-1: string> <name-2: string>```: Defines an access level group.
+```GROUP <access: int> <sort-order: int> <name-1: string> <name-2: string>```: Defines an access level group.  
 ```INFO <username:str > <access: int> <location (the status): int> <display: str> <color: hex> <flair: str> <prefix: str> <suffix: str>```: The user data.  
 ```DONE```: Marks the end of user data.  
 

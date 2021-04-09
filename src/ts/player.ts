@@ -50,9 +50,15 @@ export class Player {
 				result: "false",
 				error: "Could not register"
 			};
-		else return {
-			result: "success"
-		};
+		else {
+			// Generate the rating table data
+			let userId = Player.getUserId(username);
+			Storage.query("INSERT INTO user_ratings VALUES(@userId,0,0,0,0,0,0,0,0,0,0);").run({ userId: userId });
+
+			return {
+				result: "success"
+			};
+		}
 	}
 
 	static checkLogin(username: string, password: string, ip: string) {
