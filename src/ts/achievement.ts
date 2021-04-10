@@ -32,13 +32,31 @@ export class Achievement {
             if (!achievementData.manual) {
                 return "AUTOMATIC";
             } else {
-                let data = Storage.query("REPLACE INTO user_achievements(user_id, achievement_id, timestamp) VALUES(@userId, @achievementId, DATETIME('now','localtime'));").run({ userId: userId, achievementId: achievementId });
-                if (data.changes > 0) {
+                if (this.grantAchievement(userId, achievementId)) {
                     return "GRANTED";
                 } else {
                     return "FAILURE";
                 }
             }
         }
+    }
+
+    // The difference between this and above is this one actually handles "automatic" and the ratings
+    static grantAchievement(userId: number, achievementId: number) {
+        // Check if we already have the achievement
+        let presenceCheck = Storage.query("SELECT * FROM user_achievements WHERE user_id=@userId AND achievement_id=@achievementId;").get({ userId: userId, achievementId: achievementId });
+        if (presenceCheck === undefined) {
+            // Do the ratings calc
+            let achievementData = Storage.query("SELECT rating FROM achievement_names WHERE id = @achievementId;").get({ achievementId: achievementId });
+            // Grant the achievement
+            Storage.query("REPLACE INTO user_achievements(user_id, achievement_id, timestamp) VALUES(@userId, @achievementId, DATETIME('now','localtime'));").run({ userId: userId, achievementId: achievementId });
+
+            if (achievementData.rating > 0) {
+			    Storage.query(`UPDATE user_ratings SET rating_general=rating_general + @rating, rating_achievement=rating_achievement + @rating WHERE user_id=@userId`).run({ rating: achievementData.rating, userId: userId });
+            }
+
+            return true;
+        }
+        return false;
     }
 }
