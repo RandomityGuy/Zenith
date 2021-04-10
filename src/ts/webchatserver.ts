@@ -241,20 +241,32 @@ export class WebchatServer {
 
 		if (command === "CHAT") {
 			let dest = parts[1];
-			let conts = parts.slice(2).join(' ');
-			let response = new WebchatResponse();
-			response.chat(player.username, player.display, dest, player.accessLevel, conts);
-			if (dest === "") {
-				this.clients.forEach(x => x.send(response));
-			} else {
-				for (let client of this.clients) {
-					if (client.username === dest || client.display === dest && !client.blockList.has(player.username)) {
-						client.send(response);
+			if (!this.handleChatCommand(player, parts[2], parts.slice(3))) {
+				let conts = parts.slice(2).join(' ');
+				let response = new WebchatResponse();
+				response.chat(player.username, player.display, dest, player.accessLevel, conts);
+				if (dest === "") {
+					this.clients.forEach(x => x.send(response));
+				} else {
+					for (let client of this.clients) {
+						if (client.username === dest || client.display === dest && !client.blockList.has(player.username)) {
+							client.send(response);
+						}
 					}
 				}
 			}
 		}
 
+	}
+
+	handleChatCommand(sender: WebchatPlayer,command: string, context: string[]) {
+		if (command === "/ping") {
+			let response = new WebchatResponse();
+			response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} PONG!`);
+			sender.send(response);
+			return true;
+		}
+		return false;
 	}
 
 	verifyPlayerSession(username: string, session: string) {
