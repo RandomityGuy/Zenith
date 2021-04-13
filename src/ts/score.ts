@@ -176,10 +176,8 @@ export class Score {
 		// Now calculate our ratings
 		let rating = Score.getRating(score, mission.gamemode, missionRatingInfo, modifiers);
 
-		console.log(rating);
 		// Now delta rating
 		let topRating = Number.parseInt(personalTopScore.rating)
-		console.log(topRating);
 		let deltaRating: number;
 		if (rating > topRating) {
 			deltaRating = rating - topRating;
@@ -196,8 +194,6 @@ export class Score {
 			isWR = true;
 		}
 
-		console.log(deltaRating);
-
 		// Now update our net ratings
 		if (deltaRating > 0) {
 			// Get the rating column
@@ -207,6 +203,11 @@ export class Score {
 			// Now update
 			Storage.query(`UPDATE user_ratings SET ${ratingColumn}=${ratingColumn} + @rating WHERE user_id=@userId`).run({ rating: deltaRating, userId: userId });
 			Storage.query(`UPDATE user_ratings SET rating_general=rating_general + @rating WHERE user_id=@userId`).run({ rating: deltaRating, userId: userId });
+		}
+
+		// Quota100 ratings...
+		if (modifiers & Score.modifierFlags.quotaHundred) {
+			Storage.query(`UPDATE user_ratings SET rating_quota_bonus=rating_quota_bonus + @rating WHERE user_id=@userId`).run({ rating: missionRatingInfo.quota_100_bonus, userId: userId });
 		}
 
 		// Now finally add our score
