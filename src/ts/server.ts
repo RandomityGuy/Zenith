@@ -430,6 +430,10 @@ export class PQServer {
 		
 		let results = Score.recordScore(userId, missionId, Number.parseInt(req.searchParams.get("score")), req.searchParams.get("scoreType"), Number.parseInt(req.searchParams.get("modifiers")), Number.parseInt(req.searchParams.get("totalBonus")), Number.parseInt(req.searchParams.get("gemCount")), Number.parseInt(req.searchParams.get("gems1")), Number.parseInt(req.searchParams.get("gems2")), Number.parseInt(req.searchParams.get("gems5")), Number.parseInt(req.searchParams.get("gems10")));
 
+		if (req.searchParams.has("lapTime")) {
+			Score.recordLapTime(userId, missionId, Number.parseInt(req.searchParams.get("lapTime")));
+		}
+
 		// Generate our custom result data
 		let obj = [] as string[];
 		results.forEach(x => {

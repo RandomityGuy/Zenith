@@ -397,4 +397,10 @@ export class Score {
 		//Unknown game mode, just use null mode
 		return Score.getNullScoreRating(score, ratingInfo, modifiers);
 	}
+
+	static recordLapTime(userId: number, missionId: number, time: number)
+	{
+		let q = Storage.query("INSERT INTO user_lap_times(mission_id,user_id,time,timestamp) VALUES(@missionId,@userId,@time,DATETIME('now','localtime'));").run({ missionId: missionId, userId: userId, time: time });
+		return (q.changes > 0);
+	}
 }
