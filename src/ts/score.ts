@@ -1,3 +1,4 @@
+import { Achievement } from "./achievement";
 import { Storage } from "./storage";
 
 interface RatingInfo {
@@ -52,24 +53,25 @@ export class Score {
 		let topScoresData = Storage.query("SELECT mission_id, score, score_type FROM user_scores WHERE user_id = @userId AND user_scores.disabled = 0 GROUP BY mission_id HAVING sort = MIN(sort);").all({ userId: userId });
 		let lapTimes = Storage.query("SELECT mission_id, time as 'score', 'time' as score_type FROM user_lap_times WHERE user_id = @userId GROUP BY mission_id HAVING MIN(time);").all({ userId: userId })
 		let quota100 = Storage.query("SELECT mission_id, score, score_type FROM user_scores WHERE user_id = @userId AND (modifiers & (1 << 4) = (1 << 4)) GROUP BY mission_id HAVING (CASE WHEN score_type='time' THEN MIN(score) ELSE MAX(score) END)").all({ userId: userId });
-		let wrList = Storage.query(`SELECT T.mission_id
-									FROM (
-										SELECT S.mission_id, S.user_id, S.score, missions.name, missions.sort_index, timestamp
-										FROM (
-											SELECT mission_id, user_id, score, 1 AS priority, timestamp
-											FROM user_scores 
-											WHERE score_type = 'time' AND disabled = 0 
-											GROUP BY mission_id HAVING MIN(score)
-											UNION
-											SELECT mission_id, user_id, score, 0 AS priority, timestamp
-											FROM user_scores 
-											WHERE score_type = 'score' AND disabled = 0 
-											GROUP BY mission_id HAVING MAX(score)
-										) AS S, missions, mission_games
-										WHERE missions.is_custom = 0 AND missions.id = S.mission_id AND missions.id = S.mission_id AND mission_games.id = missions.game_id AND mission_games.game_type = 'Single Player'
-										GROUP BY mission_id HAVING MAX(priority) ANd MAX(timestamp)
-									) AS T
-									WHERE T.user_id = @userId;`).all({ userId: userId }).map(x => x.mission_id);
+		let wrList = Storage.query(`
+		SELECT T.mission_id
+		FROM (
+			SELECT S.mission_id, S.user_id, S.score, missions.name, missions.sort_index, timestamp
+			FROM (
+				SELECT mission_id, user_id, score, 1 AS priority, timestamp
+				FROM user_scores 
+				WHERE score_type = 'time' AND disabled = 0 
+				GROUP BY mission_id HAVING MIN(score)
+				UNION
+				SELECT mission_id, user_id, score, 0 AS priority, timestamp
+				FROM user_scores 
+				WHERE score_type = 'score' AND disabled = 0 
+				GROUP BY mission_id HAVING MAX(score)
+			) AS S, missions, mission_games
+			WHERE missions.is_custom = 0 AND missions.id = S.mission_id AND missions.id = S.mission_id AND mission_games.id = missions.game_id AND mission_games.game_type = 'Single Player'
+			GROUP BY mission_id HAVING MAX(priority) ANd MAX(timestamp)
+		) AS T
+		WHERE T.user_id = @userId;`).all({ userId: userId }).map(x => x.mission_id);
 		let dict = new Map<any, any>();
 		topScoresData.forEach(x => {
 			dict.set(Number.parseInt(x.mission_id), {
@@ -224,21 +226,22 @@ export class Score {
 		// Calculate our rank
 		let scoreId = Storage.query("SELECT MAX(id) AS scoreId FROM user_scores;").get(); // ehh
 		scoreId = scoreId.scoreId;
-		let rank = Storage.query(`	SELECT placement
-									FROM (
-										SELECT *, RANK() OVER (ORDER BY sort ASC) AS placement, id
-										FROM (
-											SELECT score, sort, user_id, user_scores.id
-											FROM user_scores, users 
-											WHERE mission_id = @missionId AND users.id = user_scores.user_id AND (modifiers & 0 = 0) AND disabled = 0 AND user_id != @userId
-											GROUP BY user_id
-											UNION 
-											SELECT user_scores.score, user_scores.sort, user_scores.user_id, user_scores.id
-											FROM user_scores
-											WHERE id = @scoreId
-										)
-									)
-									WHERE id = @scoreId`).get({ missionId: missionId, userId: userId, scoreId: scoreId });
+		let rank = Storage.query(`
+		SELECT placement
+		FROM (
+			SELECT *, RANK() OVER (ORDER BY sort ASC) AS placement, id
+			FROM (
+				SELECT score, sort, user_id, user_scores.id
+				FROM user_scores, users 
+				WHERE mission_id = @missionId AND users.id = user_scores.user_id AND (modifiers & 0 = 0) AND disabled = 0 AND user_id != @userId
+				GROUP BY user_id
+				UNION 
+				SELECT user_scores.score, user_scores.sort, user_scores.user_id, user_scores.id
+				FROM user_scores
+				WHERE id = @scoreId
+			)
+		)
+		WHERE id = @scoreId`).get({ missionId: missionId, userId: userId, scoreId: scoreId });
 		rank = rank.placement;
 
 		// Now generate our final result;
@@ -254,6 +257,9 @@ export class Score {
 		resultset.push(`DELTA ${deltaRating}`);
 		if (isWR)
 			resultset.push("RECORDING");
+		
+		// Do the achievement shit
+		Achievement.updateSinglePlayerAchievements(userId);
 		
 		return resultset;
 	}

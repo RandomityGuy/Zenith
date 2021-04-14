@@ -250,20 +250,24 @@ export class Player {
 			}
 		}
 		let rating = Storage.query("SELECT * FROM user_ratings WHERE user_id = @userId").get({ userId: userId });
-		let ranking = Storage.query(`SELECT * FROM (SELECT 
-									rank() OVER (ORDER BY rating_general DESC) AS 'rating_general', 
-									rank() OVER (ORDER BY rating_custom DESC) AS 'rating_custom', 
-									rank() OVER (ORDER BY rating_mbg DESC) AS 'rating_mbg',
-									rank() OVER (ORDER BY rating_mbp DESC) AS 'rating_mbp',
-									rank() OVER (ORDER BY rating_mbu DESC) AS 'rating_mbu',
-									rank() OVER (ORDER BY rating_pq DESC) AS 'rating_pq',
-									rank() OVER (ORDER BY rating_mp DESC) AS 'rating_mp',
-									rank() OVER (ORDER BY rating_egg DESC) AS 'rating_egg',
-									rank() OVER (ORDER BY rating_achievement DESC) AS 'rating_achievement',
-									rank() OVER (ORDER BY rating_quota_bonus DESC) AS 'rating_quota_bonus',
-									user_id
-									FROM user_ratings)
-									WHERE user_id = @userId;`).get({ userId: userId });
+		let ranking = Storage.query(`
+		SELECT * FROM
+		(
+			SELECT
+			rank() OVER (ORDER BY rating_general DESC) AS 'rating_general', 
+			rank() OVER (ORDER BY rating_custom DESC) AS 'rating_custom', 
+			rank() OVER (ORDER BY rating_mbg DESC) AS 'rating_mbg',
+			rank() OVER (ORDER BY rating_mbp DESC) AS 'rating_mbp',
+			rank() OVER (ORDER BY rating_mbu DESC) AS 'rating_mbu',
+			rank() OVER (ORDER BY rating_pq DESC) AS 'rating_pq',
+			rank() OVER (ORDER BY rating_mp DESC) AS 'rating_mp',
+			rank() OVER (ORDER BY rating_egg DESC) AS 'rating_egg',
+			rank() OVER (ORDER BY rating_achievement DESC) AS 'rating_achievement',
+			rank() OVER (ORDER BY rating_quota_bonus DESC) AS 'rating_quota_bonus',
+			user_id
+			FROM user_ratings
+		)
+		WHERE user_id = @userId;`).get({ userId: userId });
 		let flair: string;
 		let flairId = initialData.titleFlair !== null ? Number.parseInt(initialData.titleFlair) : 0;
 		if (Storage.settings.chat_flairs.length > flairId) {
@@ -322,20 +326,21 @@ export class Player {
 		let rating = ratingRankdata.rating_general;
 		let rank = ratingRankdata.rank;
 
-		let totalTime = Storage.query(`SELECT SUM(score) AS totalTime
-										FROM (
-											SELECT score 
-											FROM user_scores, missions, mission_games 
-											WHERE user_id = @userId 
-												AND score_type = 'time' 
-												AND mission_id = missions.id  
-												AND missions.is_custom = 0 
-												AND mission_games.id = missions.game_id
-												AND mission_games.game_type = 'Single Player'
-												AND user_scores.disabled = 0
-											GROUP BY mission_id 
-											HAVING sort = MIN(sort)
-										);`).get({ userId: userId });
+		let totalTime = Storage.query(`
+		SELECT SUM(score) AS totalTime
+		FROM (
+			SELECT score 
+			FROM user_scores, missions, mission_games 
+			WHERE user_id = @userId 
+				AND score_type = 'time' 
+				AND mission_id = missions.id  
+				AND missions.is_custom = 0 
+				AND mission_games.id = missions.game_id
+				AND mission_games.game_type = 'Single Player'
+				AND user_scores.disabled = 0
+			GROUP BY mission_id 
+			HAVING sort = MIN(sort)
+		);`).get({ userId: userId });
 		if (totalTime === undefined) {
 			totalTime = "0";
 		} else {
@@ -350,44 +355,47 @@ export class Player {
 
 		let gameStats = new Map<number, any>();
 		gameIdData.forEach(game => {
-			let gameData = Storage.query(`	SELECT awesome_time_name, ultimate_time_name, platinum_time_name, easter_egg_name, has_awesome_times, has_ultimate_times, has_platinum_times, has_easter_eggs, mission_games.name, awesome_time_count, ultimate_time_count, platinum_time_count, egg_count, COUNT(*) AS total_missions 
-											FROM mission_games, missions, mission_rating_info
-											WHERE mission_games.id = @gameId
-												AND missions.game_id = mission_games.id
-												AND mission_rating_info.mission_id = missions.id
-												AND mission_rating_info.disabled=0
-												AND missions.id != 392;`).get({ gameId: game.id }); // Because fuck vice-versa
+			let gameData = Storage.query(`
+			SELECT awesome_time_name, ultimate_time_name, platinum_time_name, easter_egg_name, has_awesome_times, has_ultimate_times, has_platinum_times, has_easter_eggs, mission_games.name, awesome_time_count, ultimate_time_count, platinum_time_count, egg_count, COUNT(*) AS total_missions
+			FROM mission_games, missions, mission_rating_info
+			WHERE mission_games.id = @gameId
+				AND missions.game_id = mission_games.id
+				AND mission_rating_info.mission_id = missions.id
+				AND mission_rating_info.disabled=0
+				AND missions.id != 392;`).get({ gameId: game.id }); // Because fuck vice-versa
 
-			let gameRatingData = Storage.query(`SELECT SUM(rating) AS rating
-												FROM (
-													SELECT rating
-													FROM user_scores, missions, mission_games 
-													WHERE user_id = @userId AND missions.id = user_scores.mission_id AND missions.game_id = mission_games.id AND missions.game_id = @gameId AND user_scores.disabled = 0
-													GROUP BY mission_id 
-													HAVING sort = MIN(sort)
-												);`).get({ userId: userId, gameId: game.id });
+			let gameRatingData = Storage.query(`
+			SELECT SUM(rating) AS rating
+			FROM (
+				SELECT rating
+				FROM user_scores, missions, mission_games 
+				WHERE user_id = @userId AND missions.id = user_scores.mission_id AND missions.game_id = mission_games.id AND missions.game_id = @gameId AND user_scores.disabled = 0
+				GROUP BY mission_id 
+				HAVING sort = MIN(sort)
+			);`).get({ userId: userId, gameId: game.id });
 			if (gameRatingData === undefined) {
 				gameRatingData = 0;
 			} else {
 				gameRatingData = gameRatingData.rating;
 			}
 
-			let gameRankData = Storage.query(`	SELECT gameRank
-												FROM (
-													SELECT SUM(rating) AS totRating, user_id, RANK() OVER (ORDER BY SUM(rating) DESC) AS gameRank
-													FROM (
-														SELECT rating, user_id, mission_id
-														FROM user_scores, missions, mission_games 
-														WHERE missions.id = user_scores.mission_id AND missions.game_id = mission_games.id AND missions.game_id = @gameId AND user_scores.disabled = 0
-														GROUP BY mission_id, user_id
-														HAVING sort = MIN(sort)
-													), users
-													WHERE user_id = users.id
-													GROUP BY user_id
-													ORDER BY totRating DESC
-												)
-												WHERE
-												user_id = @userId;`).get({ userId: userId, gameId: game.id });
+			let gameRankData = Storage.query(`
+			SELECT gameRank
+			FROM (
+				SELECT SUM(rating) AS totRating, user_id, RANK() OVER (ORDER BY SUM(rating) DESC) AS gameRank
+				FROM (
+					SELECT rating, user_id, mission_id
+					FROM user_scores, missions, mission_games 
+					WHERE missions.id = user_scores.mission_id AND missions.game_id = mission_games.id AND missions.game_id = @gameId AND user_scores.disabled = 0
+					GROUP BY mission_id, user_id
+					HAVING sort = MIN(sort)
+				), users
+				WHERE user_id = users.id
+				GROUP BY user_id
+				ORDER BY totRating DESC
+			)
+			WHERE
+			user_id = @userId;`).get({ userId: userId, gameId: game.id });
 			if (gameRankData === undefined) {
 				gameRankData = 0;
 			} else {
@@ -396,20 +404,21 @@ export class Player {
 
 			function getChallengeTimeCount(challengeTime: string) {
 
-				let CTCount = Storage.query(`	SELECT COUNT(*) AS CTCount
-												FROM (
-													SELECT * 
-													FROM user_scores, mission_rating_info, mission_games, missions
-													WHERE user_scores.user_id = @userId AND mission_rating_info.mission_id = user_scores.mission_id AND mission_games.id = @gameId AND mission_games.id  = missions.game_id AND missions.id = user_scores.mission_id AND user_scores.disabled = 0
-													GROUP BY user_scores.mission_id 
-													HAVING sort = MIN(sort)
-												)
-												WHERE ( 
-													CASE
-													WHEN score_type = 'time' THEN ( ${challengeTime}_time > score OR gamemode LIKE '%gemmadness%')
-													WHEN score_type = 'score' THEN ${challengeTime}_score < score
-													END
-												);`).get({ userId: userId, gameId: game.id });
+				let CTCount = Storage.query(`
+				SELECT COUNT(*) AS CTCount
+				FROM (
+					SELECT * 
+					FROM user_scores, mission_rating_info, mission_games, missions
+					WHERE user_scores.user_id = @userId AND mission_rating_info.mission_id = user_scores.mission_id AND mission_games.id = @gameId AND mission_games.id  = missions.game_id AND missions.id = user_scores.mission_id AND user_scores.disabled = 0
+					GROUP BY user_scores.mission_id 
+					HAVING sort = MIN(sort)
+				)
+				WHERE ( 
+					CASE
+					WHEN score_type = 'time' THEN ( ${challengeTime}_time > score OR gamemode LIKE '%gemmadness%')
+					WHEN score_type = 'score' THEN ${challengeTime}_score < score
+					END
+				);`).get({ userId: userId, gameId: game.id });
 				if (CTCount === undefined) {
 					CTCount = 0;
 				} else {
@@ -423,20 +432,21 @@ export class Player {
 			let platinumCount = getChallengeTimeCount("platinum");
 			let parCount = getChallengeTimeCount("par");
 
-			let gameTotalTime = Storage.query(`SELECT SUM(score) AS totalTime
-											FROM (
-												SELECT score 
-												FROM user_scores, missions, mission_games 
-												WHERE user_id = @userId 
-													AND score_type = 'time' 
-													AND mission_id = missions.id  
-													AND missions.is_custom = 0 
-													AND mission_games.id = missions.game_id
-													AND mission_games.id = @gameId
-													AND user_scores.disabled = 0
-												GROUP BY mission_id 
-												HAVING sort = MIN(sort)
-											);`).get({ userId: userId, gameId: game.id });
+			let gameTotalTime = Storage.query(`
+			SELECT SUM(score) AS totalTime
+			FROM (
+				SELECT score 
+				FROM user_scores, missions, mission_games 
+				WHERE user_id = @userId 
+					AND score_type = 'time' 
+					AND mission_id = missions.id  
+					AND missions.is_custom = 0 
+					AND mission_games.id = missions.game_id
+					AND mission_games.id = @gameId
+					AND user_scores.disabled = 0
+				GROUP BY mission_id 
+				HAVING sort = MIN(sort)
+			);`).get({ userId: userId, gameId: game.id });
 			
 			if (gameTotalTime === undefined) {
 				gameTotalTime = 0;
@@ -444,56 +454,60 @@ export class Player {
 				gameTotalTime = gameTotalTime.totalTime;
 			}
 
-			let eggCount = Storage.query(`	SELECT COUNT(*) AS eggCount
-											FROM (
-												SELECT * 
-												FROM user_eggs, missions, mission_games 
-												WHERE user_eggs.mission_id = missions.id AND missions.game_id = @gameId AND user_id = @userId 
-												GROUP BY mission_id 
-												HAVING MIN("time")
-											);`).get({ userId: userId, gameId: game.id });
+			let eggCount = Storage.query(`
+			SELECT COUNT(*) AS eggCount
+			FROM (
+				SELECT * 
+				FROM user_eggs, missions, mission_games 
+				WHERE user_eggs.mission_id = missions.id AND missions.game_id = @gameId AND user_id = @userId 
+				GROUP BY mission_id 
+				HAVING MIN("time")
+			);`).get({ userId: userId, gameId: game.id });
 			eggCount = eggCount.eggCount;
 
-			let difficultyInitialData = Storage.query(`	SELECT mission_difficulties.name, mission_difficulties.display, COUNT(*) AS total_missions, missions.difficulty_id
-														FROM mission_difficulties, missions
-														WHERE missions.game_id = @gameId AND missions.difficulty_id = mission_difficulties.id AND mission_difficulties.disabled = 0 AND missions.id != 392
-														GROUP BY difficulty_id;`).all({ gameId: game.id });
+			let difficultyInitialData = Storage.query(`
+			SELECT mission_difficulties.name, mission_difficulties.display, COUNT(*) AS total_missions, missions.difficulty_id
+			FROM mission_difficulties, missions
+			WHERE missions.game_id = @gameId AND missions.difficulty_id = mission_difficulties.id AND mission_difficulties.disabled = 0 AND missions.id != 392
+			GROUP BY difficulty_id;`).all({ gameId: game.id });
 			
 			let difficultyData = [] as any[];
 			difficultyInitialData.forEach(diff => {
-				let difficultyTotalTime = Storage.query(`SELECT SUM(score) AS totalTime
-								FROM (
-									SELECT score 
-									FROM user_scores, missions
-									WHERE user_id = @userId 
-										AND score_type = 'time' 
-										AND mission_id = missions.id  
-										AND missions.is_custom = 0 
-										AND missions.difficulty_id = @difficultyId
-										AND user_scores.disabled = 0
-									GROUP BY mission_id 
-									HAVING sort = MIN(sort)
-								);`).get({ userId: userId, difficultyId: diff.difficulty_id });
+				let difficultyTotalTime = Storage.query(`
+				SELECT SUM(score) AS totalTime
+				FROM (
+					SELECT score 
+					FROM user_scores, missions
+					WHERE user_id = @userId 
+						AND score_type = 'time' 
+						AND mission_id = missions.id  
+						AND missions.is_custom = 0 
+						AND missions.difficulty_id = @difficultyId
+						AND user_scores.disabled = 0
+					GROUP BY mission_id 
+					HAVING sort = MIN(sort)
+				);`).get({ userId: userId, difficultyId: diff.difficulty_id });
 				if (difficultyTotalTime === undefined) {
 					difficultyTotalTime = 0;
 				} else {
 					difficultyTotalTime = difficultyTotalTime.totalTime;
 				}
 
-				let completionData = Storage.query(`	SELECT COUNT(*) AS CTCount
-														FROM (
-															SELECT * 
-															FROM user_scores, mission_rating_info, missions
-															WHERE user_scores.user_id = @userId AND mission_rating_info.mission_id = user_scores.mission_id AND missions.difficulty_id = @difficultyId AND missions.id = user_scores.mission_id AND user_scores.disabled = 0
-															GROUP BY user_scores.mission_id 
-															HAVING sort = MIN(sort)
-														)
-														WHERE ( 
-															CASE
-															WHEN score_type = 'time' THEN par_time > score
-															WHEN score_type = 'score' THEN par_score < score
-															END
-														);`).get({ userId: userId, difficultyId: diff.difficulty_id });
+				let completionData = Storage.query(`
+				SELECT COUNT(*) AS CTCount
+				FROM (
+					SELECT * 
+					FROM user_scores, mission_rating_info, missions
+					WHERE user_scores.user_id = @userId AND mission_rating_info.mission_id = user_scores.mission_id AND missions.difficulty_id = @difficultyId AND missions.id = user_scores.mission_id AND user_scores.disabled = 0
+					GROUP BY user_scores.mission_id 
+					HAVING sort = MIN(sort)
+				)
+				WHERE ( 
+					CASE
+					WHEN score_type = 'time' THEN par_time > score
+					WHEN score_type = 'score' THEN par_score < score
+					END
+				);`).get({ userId: userId, difficultyId: diff.difficulty_id });
 				
 				if (completionData === undefined) {
 					completionData = 0;

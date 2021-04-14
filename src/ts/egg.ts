@@ -1,3 +1,4 @@
+import { Achievement } from "./achievement";
 import { Storage } from "./storage";
 
 export class Egg {
@@ -21,6 +22,9 @@ export class Egg {
 		} else {
 			minTime = minTime.minTime;
 		}
+
+		// Do the achievement check
+		Achievement.updateSinglePlayerAchievements(userId);
 
 		// Insert our score
 		let res = Storage.query(`INSERT INTO user_eggs(user_id,mission_id,time,timestamp) VALUES(@userId,@missionId,@time,DATETIME('now','localtime'));`).run({ userId: userId, missionId: missionId, time: time });
