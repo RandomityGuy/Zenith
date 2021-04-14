@@ -1,3 +1,4 @@
+import { Achievement } from "./achievement";
 import { Player } from "./player";
 import { Score } from "./score";
 import { Storage } from "./storage";
@@ -118,7 +119,7 @@ export class Multiplayer {
 				scoreId = scoreId.scoreId;
 
 				// Now fill up the match_scores
-				Storage.query(`INSERT INTO match_scores(match_id,user_id,score_id,team_id,placement,time_percent) VALUES (@matchId, @userId, @scoreId, @teamId, @placement, @timePercent);`).run({ matchId: matchId, userId: userId, scoreId: scoreId, teamId: (teams.length > 0) ? teamDict.get(score.team) : "", placement: score.place, timePercent: score.timePercent });
+				Storage.query(`INSERT INTO match_scores(match_id,user_id,score_id,team_id,placement,time_percent) VALUES (@matchId, @userId, @scoreId, @teamId, @placement, @timePercent);`).run({ matchId: matchId, userId: userId, scoreId: scoreId, teamId: (teams.length > 0) ? teamDict.get(score.team) : -1, placement: score.place, timePercent: score.timePercent });
 
 				// Fix this to actually have ratings
 			}
@@ -126,6 +127,8 @@ export class Multiplayer {
 			retObj.push({ username: score.username, rating: 0, change: 0, place: score.place });
 				
 		})
+
+		Achievement.UpdateMultiplayerAchievements(userId); // This is ew
 
 		return retObj;
 	}
