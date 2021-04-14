@@ -54,8 +54,14 @@ export class Multiplayer {
 
 		let retObj: any[] = [];
 
+		let bonusRating = 20 * Math.min(scores.filter(x => !x.guest).length - 1, 0);
+
+		let topScore = scores.find(x => x.place === 1).score;
+
 		// Scores
 		scores.forEach((score) => {
+			let rating = bonusRating;
+			let totRating = 0;
 			if (!score.guest) {
 
 				let playerId = Player.getUserId(score.username);
@@ -111,9 +117,16 @@ export class Multiplayer {
 
 				let sort = scoreType === "time" ? score.score : 10000000 - score.score;
 
+				if (score.place === 1) {
+					rating += 30;
+				}
+
+				rating *= score.score / topScore;
+
+				rating = Math.floor(rating);
+
 				let insertQuery = Storage.query(`INSERT INTO user_scores(user_id,mission_id,score,score_type,total_bonus,rating,gem_count,gems_1_point,gems_2_point,gems_5_point,gems_10_point,modifiers,origin,extra_modes,sort,disabled,timestamp) VALUES (@userId, @missionId, @score, @scoreType, @totalBonus, @rating, @gemCount, @gems1, @gems2, @gems5, @gems10, @modifiers, 'PlatinumQuest', '', @sort, '0', DATETIME('now','localtime'));`);
-				// TODO FIX RATINGS
-				let c = insertQuery.run({ userId: playerId, missionId: missionId, score: score.score, scoreType: scoreType, totalBonus: totalBonus, rating: 0, gemCount: score.gemCount, gems1: score.gems1, gems2: score.gems2, gems5: score.gems5, gems10: score.gems10, modifiers: modifiers, sort: sort });
+				let c = insertQuery.run({ userId: playerId, missionId: missionId, score: score.score, scoreType: scoreType, totalBonus: totalBonus, rating: rating, gemCount: score.gemCount, gems1: score.gems1, gems2: score.gems2, gems5: score.gems5, gems10: score.gems10, modifiers: modifiers, sort: sort });
 
 				let scoreId = Storage.query("SELECT MAX(id) AS scoreId FROM user_scores;").get(); // ehh
 				scoreId = scoreId.scoreId;
@@ -121,10 +134,11 @@ export class Multiplayer {
 				// Now fill up the match_scores
 				Storage.query(`INSERT INTO match_scores(match_id,user_id,score_id,team_id,placement,time_percent) VALUES (@matchId, @userId, @scoreId, @teamId, @placement, @timePercent);`).run({ matchId: matchId, userId: userId, scoreId: scoreId, teamId: (teams.length > 0) ? teamDict.get(score.team) : -1, placement: score.place, timePercent: score.timePercent });
 
-				// Fix this to actually have ratings
+				let ratingData = Storage.query("SELECT * FROM user_ratings WHERE user_id = @userId").get({ userId: userId });
+				totRating = ratingData.rating_mp;
 			}
 			
-			retObj.push({ username: score.username, rating: 0, change: 0, place: score.place });
+			retObj.push({ username: score.username, rating: totRating, change: rating, place: score.place });
 				
 		})
 
