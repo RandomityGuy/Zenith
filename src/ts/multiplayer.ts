@@ -54,7 +54,9 @@ export class Multiplayer {
 
 		let retObj: any[] = [];
 
-		let bonusRating = 20 * Math.min(scores.filter(x => !x.guest).length - 1, 0);
+		let playerCount = Math.min(scores.filter(x => !x.guest).length - 1, 0);
+
+		let bonusRating = 20 * playerCount;
 
 		let topScore = scores.find(x => x.place === 1).score;
 
@@ -118,17 +120,19 @@ export class Multiplayer {
 				let sort = scoreType === "time" ? score.score : 10000000 - score.score;
 
 				// Update streaks and get win bonus
-				if (score.place === 1) {
-					rating += 30;
-					let streak = Storage.query("SELECT * FROM user_streaks WHERE user_id=@userId);").get({ userId: playerId });
-					if (streak === undefined) {
-						streak = 0;
+				if (playerCount > 0) {
+					if (score.place === 1) {
+						rating += 30;
+						let streak = Storage.query("SELECT * FROM user_streaks WHERE user_id=@userId);").get({ userId: playerId });
+						if (streak === undefined) {
+							streak = 0;
+						} else {
+							streak = streak.mp_games;
+						}
+						Storage.query("REPLACE INTO user_streaks VALUES(@userId, @streakData)").run({ userId: playerId, streakData: streak + 1 });
 					} else {
-						streak = streak.mp_games;
+						Storage.query("REPLACE INTO user_streaks VALUES(@userId, @streakData)").run({ userId: playerId, streakData: 0 });
 					}
-					Storage.query("REPLACE INTO user_streaks VALUES(@userId, @streakData)").run({ userId: playerId, streakData: streak + 1 });
-				} else {
-					Storage.query("REPLACE INTO user_streaks VALUES(@userId, @streakData)").run({ userId: playerId, streakData: 0 });
 				}
 
 				rating *= score.score / topScore;
