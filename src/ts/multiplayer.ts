@@ -117,8 +117,18 @@ export class Multiplayer {
 
 				let sort = scoreType === "time" ? score.score : 10000000 - score.score;
 
+				// Update streaks and get win bonus
 				if (score.place === 1) {
 					rating += 30;
+					let streak = Storage.query("SELECT * FROM user_streaks WHERE user_id=@userId);").get({ userId: playerId });
+					if (streak === undefined) {
+						streak = 0;
+					} else {
+						streak = streak.mp_games;
+					}
+					Storage.query("REPLACE INTO user_streaks VALUES(@userId, @streakData)").run({ userId: playerId, streakData: streak + 1 });
+				} else {
+					Storage.query("REPLACE INTO user_streaks VALUES(@userId, @streakData)").run({ userId: playerId, streakData: 0 });
 				}
 
 				rating *= score.score / topScore;
@@ -132,10 +142,13 @@ export class Multiplayer {
 				scoreId = scoreId.scoreId;
 
 				// Now fill up the match_scores
-				Storage.query(`INSERT INTO match_scores(match_id,user_id,score_id,team_id,placement,time_percent) VALUES (@matchId, @userId, @scoreId, @teamId, @placement, @timePercent);`).run({ matchId: matchId, userId: userId, scoreId: scoreId, teamId: (teams.length > 0) ? teamDict.get(score.team) : -1, placement: score.place, timePercent: score.timePercent });
+				Storage.query(`INSERT INTO match_scores(match_id,user_id,score_id,team_id,placement,time_percent) VALUES (@matchId, @userId, @scoreId, @teamId, @placement, @timePercent);`).run({ matchId: matchId, userId: playerId, scoreId: scoreId, teamId: (teams.length > 0) ? teamDict.get(score.team) : -1, placement: score.place, timePercent: score.timePercent });
 
-				let ratingData = Storage.query("SELECT * FROM user_ratings WHERE user_id = @userId").get({ userId: userId });
+				// Update ratings
+				let ratingData = Storage.query("SELECT * FROM user_ratings WHERE user_id = @userId").get({ userId: playerId });
 				totRating = ratingData.rating_mp;
+				totRating += rating;
+				Storage.query("UPDATE user_ratings SET rating_mp = @rating WHERE user_id = @userId").run({ userId: playerId, rating: totRating });
 			}
 			
 			retObj.push({ username: score.username, rating: totRating, change: rating, place: score.place });
