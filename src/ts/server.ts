@@ -443,9 +443,32 @@ export class PQServer {
 			Score.recordLapTime(userId, missionId, Number.parseInt(req.searchParams.get("lapTime")));
 		}
 
+		// Generate the result thing
+		let resultset = [] as string[];
+		if (results.success) {
+			resultset.push(`SUCCESS ${results.rating}`);
+		} else {
+			resultset.push(`FAILURE`);
+		}
+		resultset.push(`RATING ${results.rating}`);
+		resultset.push(`NEWRATING ${results.newRating}`);
+		resultset.push(`POSITION ${results.rank}`);
+		resultset.push(`DELTA ${results.delta}`);
+		if (results.wr) {
+			resultset.push("RECORDING");
+
+			if (Storage.settings.show_wr_messages) {
+				// Announce WR, BUT, check the score count
+				let scores = Score.getGlobalTopScores(missionId, 0);
+				if (scores.scores.length > Storage.settings.wr_player_count) {
+					this.webchatServer.notifyWR(userId, missionId, Number.parseInt(req.searchParams.get("score")), req.searchParams.get("scoreType"));
+				}
+			}
+		}
+
 		// Generate our custom result data
 		let obj = [] as string[];
-		results.forEach(x => {
+		resultset.forEach(x => {
 			let rsp = this.response(x, req);
 			obj.push(rsp.response);
 		});

@@ -251,23 +251,19 @@ export class Score {
 		rank = rank.placement;
 
 		// Now generate our final result;
-		let resultset = [] as string[];
-		if (success) {
-			resultset.push(`SUCCESS ${rating}`);
-		} else {
-			resultset.push(`FAILURE`);
-		}
-		resultset.push(`RATING ${rating}`);
-		resultset.push(`NEWRATING ${newRating}`);
-		resultset.push(`POSITION ${rank}`);
-		resultset.push(`DELTA ${deltaRating}`);
-		if (isWR)
-			resultset.push("RECORDING");
+		let obj = {
+			success: success,
+			rating: rating,
+			newRating: newRating,
+			rank: rank,
+			delta: deltaRating,
+			wr: isWR
+		};
 		
 		// Do the achievement shit
 		Achievement.updateSinglePlayerAchievements(userId);
 		
-		return resultset;
+		return obj;
 	}
 
 	// The following data is copied from the Marble Blast Ratings Viewer source code

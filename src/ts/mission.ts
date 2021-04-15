@@ -79,4 +79,12 @@ export class Mission {
 		let res = Storage.query("REPLACE INTO user_mission_ratings(user_id,mission_id,rating) VALUES(@userId,@missionId,@rating);").run({ userId: userId, missionId: missionId, rating: rating });
 		return (res.changes > 0);
 	}
+
+	// Get mission name from its id
+	static getMissionName(missionId: number) {
+		let q = Storage.query("SELECT name FROM missions WHERE id=@missionId;").get({ missionId: missionId });
+		if (q === undefined)
+			return null;
+		return q.name;
+	}
 }

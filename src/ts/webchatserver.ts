@@ -1,5 +1,6 @@
 import * as net from "net"
 import { isPartiallyEmittedExpression } from "typescript";
+import { Mission } from "./mission";
 import { Player } from "./player";
 import { Storage } from "./storage"
 import { WebchatInfo, WebchatResponse, WebchatUser } from "./webchat";
@@ -361,6 +362,23 @@ export class WebchatServer {
 				return true;
 		}
 		return false;
+	}
+
+	// Notifies everyone of a WR
+	notifyWR(userId: number, missionId: number, score: number, scoreType: string) {
+		let response = new WebchatResponse();
+		for (let player of this.clients) {
+			if (player.userId === userId) {
+				if (scoreType === "time") {
+					response.notify("record", player.username, player.display, [WebchatResponse.encodeName(Mission.getMissionName(missionId)), score.toString()]);
+				}
+				if (scoreType === "score") {
+					response.notify("recordscore", player.username, player.display, [WebchatResponse.encodeName(Mission.getMissionName(missionId)), score.toString()]);
+				}
+				break;
+			}
+		}
+		this.clients.forEach(x => x.send(response));
 	}
 
 	// Notifies everyone a player has joined
