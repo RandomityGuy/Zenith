@@ -8,7 +8,7 @@ class WebchatPlayer {
 	socket: net.Socket;
 	session: string;
 
-	userId: number;
+	userId: number = null;
 	username: string;
 	display: string;
 	accessLevel: number = 0;
@@ -21,10 +21,14 @@ class WebchatPlayer {
 	pingInitial: number;
 
 	status: number = 0;
+	
+	isGuest: boolean = false;
 
 	rawReceivedData: string = "";
 
 	blockList: Set<string> = new Set<string>();
+
+	connectTime: Date;
 
 	constructor(socket: net.Socket) {
 		this.socket = socket;
@@ -54,6 +58,7 @@ export class WebchatServer {
 
 	onConnect(socket: net.Socket) {
 		let player = new WebchatPlayer(socket);
+		player.connectTime = new Date();
 		this.clients.add(player);
 
 		// Now we set up the socket callbacks
@@ -64,10 +69,18 @@ export class WebchatServer {
 
 	onDisconnect(player: WebchatPlayer, hadError: boolean) {
 		// Bye bye!
+		if (player.userId !== null) {
+			let seconds = Math.floor((new Date().getTime() - player.connectTime.getTime()) / 1000);
+			Storage.query("UPDATE users SET onlineTime = @time WHERE id=@userId;").run({ time: seconds, userId: player.userId });
+		}
 		this.clients.delete(player);
 	}
 
 	onError(player: WebchatPlayer, error: Error) {
+		if (player.userId !== null) {
+			let seconds = Math.floor((new Date().getTime() - player.connectTime.getTime()) / 1000);
+			Storage.query("UPDATE users SET onlineTime = @time WHERE id=@userId;").run({ time: seconds, userId: player.userId });
+		}
 		console.log(`Player ${player.username} errored out due to ${error.message}`);
 		this.clients.delete(player);
 	}
@@ -88,85 +101,15 @@ export class WebchatServer {
 
 		if (command === "IDENTIFY") {
 			player.username = parts[1];
+			if (player.username === "Guest") {
+				player.username = "Guest_" + Player.strRandom(10);
+				player.isGuest = true;
+				this.handleLogin(player, ["VERIFY", "100000", "bruh"]);
+			}
 		}
 
 		if (command === "VERIFY") {
-			player.gameVersion = Number.parseInt(parts[1]);
-			let pwd = parts[2];
-			let authdata = Player.checkLogin(player.username, pwd, player.socket.remoteAddress) as any;
-
-			let response = new WebchatResponse();
-			if (player.gameVersion < Storage.settings.gameVersion) {
-				response.identify("OUTOFDATE");
-			}
-			if (authdata.success) {
-				player.userId = authdata.id;
-				player.accessLevel = authdata.access;
-				player.display = authdata.display;
-
-				let titleFlairData = Storage.query("SELECT accessLevel AS access, registerDate, colorValue AS color, donations, id, statusMsg AS status, titleFlair, titlePrefix, titleSuffix, username, name FROM users WHERE id = @userId;").get({ userId: player.userId }); // Taken from player.ts
-				player.titlePrefix = titleFlairData.titlePrefix;
-				player.titleSuffix = titleFlairData.titleSuffix;
-
-				response.identify("SUCCESS");
-				let responseInfo = new WebchatInfo();
-				responseInfo.access(authdata.access);
-				responseInfo.displayName(authdata.display);
-				responseInfo.servertime(new Date().getTime());
-				responseInfo.welcome(Storage.settings.welcome);
-				responseInfo.defaultHSName(Storage.settings.default_name);
-				responseInfo.address(player.socket.remoteAddress);
-				responseInfo.help(Storage.settings.chat_help_info, Storage.settings.chat_help_cmdlist);
-				responseInfo.privelege(authdata.access);
-				response.info(responseInfo);
-
-				// The friend list
-				let friendlist = Player.getFriendsList(authdata.id);
-				friendlist.forEach(x => {
-					response.addFriend(x.username, x.name);
-				})
-
-				// The block list
-				let blocklist = Player.getBlockList(authdata.id);
-				blocklist.forEach(x => {
-					response.addBlock(x.username, x.name);
-					player.blockList.add(x.username);
-				})
-
-				// Chat statuses
-				Storage.settings.chat_statuses.forEach((x,idx) => {
-					response.status(idx, x);
-				})
-
-				// The list of available chat colours
-				Storage.settings.chat_colors.forEach(x => {
-					response.color(x.key, x.value)
-				})
-
-				// The list of available chat flairs
-				Storage.settings.chat_flairs.forEach(x => {
-					response.flair(x);
-				})
-
-				if (Storage.settings.halloween_event)
-					response.frightfest()
-				
-				if (Storage.settings.winter_event)
-					response.winterfest()
-
-				response.logged();
-			} else {
-				if (authdata.reason === "username" || authdata.reason === "password") {
-					response.identify("INVALID");
-				}
-				if (authdata.reason === "banned") {
-					response.identify("BANNED");
-				}
-			}
-			player.send(response);
-			if (authdata.success) { // Send player join notification to everyone
-				this.notifyJoin(player);
-			}
+			this.handleLogin(player, parts);
 		}
 
 		if (command === "SESSION") {
@@ -235,6 +178,10 @@ export class WebchatServer {
 		}
 
 		if (command === "DISCONNECT") {
+			if (player.userId !== null) {
+				let seconds = Math.floor((new Date().getTime() - player.connectTime.getTime()) / 1000);
+				Storage.query("UPDATE users SET onlineTime = @time WHERE id=@userId;").run({ time: seconds, userId: player.userId });
+			}
 			this.clients.delete(player);
 			player.socket.destroy();
 		}
@@ -257,6 +204,102 @@ export class WebchatServer {
 			}
 		}
 
+	}
+
+	handleLogin(player: WebchatPlayer, parts: string[]) {
+		player.gameVersion = Number.parseInt(parts[1]);
+		let pwd = parts[2];
+		let authdata = Player.checkLogin(player.username, pwd, player.socket.remoteAddress) as any;
+		if (player.isGuest) {
+			authdata = {
+				id: 0,
+				access: 3,
+				display: player.username,
+				success: true
+			}
+		}
+
+		let response = new WebchatResponse();
+		if (player.gameVersion < Storage.settings.gameVersion) {
+			response.identify("OUTOFDATE");
+		}
+		if (authdata.success || player.isGuest) {
+			player.userId = authdata.id;
+			player.accessLevel = authdata.access;
+			player.display = authdata.display;
+
+			if (!player.isGuest) {
+				let titleFlairData = Storage.query("SELECT accessLevel AS access, registerDate, colorValue AS color, donations, id, statusMsg AS status, titleFlair, titlePrefix, titleSuffix, username, name FROM users WHERE id = @userId;").get({ userId: player.userId }); // Taken from player.ts
+				player.titlePrefix = titleFlairData.titlePrefix;
+				player.titleSuffix = titleFlairData.titleSuffix;
+			} else {
+				player.titlePrefix = player.titleSuffix = "";
+			}
+
+			response.identify("SUCCESS");
+			let responseInfo = new WebchatInfo();
+			responseInfo.access(authdata.access);
+			responseInfo.displayName(authdata.display);
+			responseInfo.servertime(new Date().getTime());
+			responseInfo.welcome(Storage.settings.welcome);
+			responseInfo.defaultHSName(Storage.settings.default_name);
+			responseInfo.address(player.socket.remoteAddress);
+			responseInfo.help(Storage.settings.chat_help_info, Storage.settings.chat_help_cmdlist);
+			responseInfo.privelege(authdata.access);
+
+			if (player.isGuest) {
+				responseInfo.canChat(false);
+			}
+
+			response.info(responseInfo);
+
+			// The friend list
+			let friendlist = Player.getFriendsList(authdata.id);
+			friendlist.forEach(x => {
+				response.addFriend(x.username, x.name);
+			})
+
+			// The block list
+			let blocklist = Player.getBlockList(authdata.id);
+			blocklist.forEach(x => {
+				response.addBlock(x.username, x.name);
+				player.blockList.add(x.username);
+			})
+
+			// Chat statuses
+			Storage.settings.chat_statuses.forEach((x,idx) => {
+				response.status(idx, x);
+			})
+
+			// The list of available chat colours
+			Storage.settings.chat_colors.forEach(x => {
+				response.color(x.key, x.value)
+			})
+
+			// The list of available chat flairs
+			Storage.settings.chat_flairs.forEach(x => {
+				response.flair(x);
+			})
+
+			if (Storage.settings.halloween_event)
+				response.frightfest()
+			
+			if (Storage.settings.winter_event)
+				response.winterfest()
+
+			response.logged();
+		} else {
+			if (authdata.reason === "username" || authdata.reason === "password") {
+				response.identify("INVALID");
+			}
+			if (authdata.reason === "banned") {
+				response.identify("BANNED");
+			}
+		}
+		player.send(response);
+		if (authdata.success) { // Send player join notification to everyone
+			this.notifyJoin(player);
+		}
 	}
 
 	handleChatCommand(sender: WebchatPlayer,command: string, context: string[]) {
@@ -327,13 +370,17 @@ export class WebchatServer {
 		groups.forEach(x => response.group(x));
 
 		this.clients.forEach(player => {
-			let titleFlairData = Storage.query("SELECT accessLevel AS access, registerDate, colorValue AS color, donations, id, statusMsg AS status, titleFlair, titlePrefix, titleSuffix, username, name FROM users WHERE id = @userId;").get({ userId: player.userId }); // Taken from player.ts
-			let flair = Number.parseInt(titleFlairData.titleFlair);
-			let flairStr = "";
-			if (Storage.settings.chat_flairs.length > flair) {
-				flairStr = Storage.settings.chat_flairs[flair];
+			if (!player.isGuest) {
+				let titleFlairData = Storage.query("SELECT accessLevel AS access, registerDate, colorValue AS color, donations, id, statusMsg AS status, titleFlair, titlePrefix, titleSuffix, username, name FROM users WHERE id = @userId;").get({ userId: player.userId }); // Taken from player.ts
+				let flair = Number.parseInt(titleFlairData.titleFlair);
+				let flairStr = "";
+				if (Storage.settings.chat_flairs.length > flair) {
+					flairStr = Storage.settings.chat_flairs[flair];
+				}
+				response.userInfo(new WebchatUser(player.username, player.display, player.accessLevel, player.status, titleFlairData.color, flairStr, titleFlairData.titlePrefix, titleFlairData.titleSuffix));
+			} else {
+				response.userInfo(new WebchatUser(player.username, player.username, 3, 0, "#000000", "", "", ""));
 			}
-			response.userInfo(new WebchatUser(player.username, player.display, player.accessLevel, player.status, titleFlairData.color, flairStr, titleFlairData.titlePrefix, titleFlairData.titleSuffix));
 		})
 	}
 }
