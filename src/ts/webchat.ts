@@ -19,7 +19,6 @@ export class WebchatUser {
 		this.suffix = suffix;
 	}
 }
-
 export class WebchatInfo {
 	text: string[] = [];
 
@@ -211,6 +210,7 @@ export class WebchatResponse {
 		this.text.push("INVALID");
 	}
 
+	// Generate the webchat response
 	getResult() {
 		let result: string[] = [];
 
@@ -255,12 +255,14 @@ export class WebchatResponse {
 		return result;
 	}
 
+	// Encode name for webchat purposes
 	static encodeName(name: string) {
 		if (name === null)
 			return "";
 		return name.replace(" ", "-SPC-").replace("\n", "-NL-").replace("\t", "-TAB-");
 	}
 
+	// Decode a name used for webchat purposes
 	static decodeName(name: string) {
 		if (name === null)
 			return "";

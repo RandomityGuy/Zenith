@@ -2,6 +2,7 @@ import * as path from 'path';
 import { Storage } from './storage'
 export class Mission {
 
+	// Gets the list of missions for the leaderboards
 	static getMissionList(gameType: "Single Player" | "Multiplayer") {
 		let gameListData = Storage.query("SELECT display, force_gamemode, has_blast, id, name FROM mission_games WHERE game_type = @gameType AND disabled=0;").all({ gameType: gameType });
 
@@ -73,6 +74,7 @@ export class Mission {
 		}
 	}
 
+	// Rate a mission
 	static rateMission(userId: number, missionId: number, rating: number) {
 		let res = Storage.query("REPLACE INTO user_mission_ratings(user_id,mission_id,rating) VALUES(@userId,@missionId,@rating);").run({ userId: userId, missionId: missionId, rating: rating });
 		return (res.changes > 0);

@@ -2,6 +2,8 @@ import { Achievement } from "./achievement";
 import { Storage } from "./storage";
 
 export class Egg {
+	
+	// Gets the list of all easter eggs by a player
 	static getEasterEggs(userId: number) {
 		let eggData = Storage.query(`SELECT * FROM user_eggs WHERE user_id = @userId GROUP BY mission_id HAVING MIN("time");`).all({ userId: userId });
 
@@ -14,6 +16,7 @@ export class Egg {
 		return jobj;
 	}
 
+	// Insert the egg record into the database
 	static recordEgg(userId: number, missionId: number, time: number) {
 		// First lets get the lowest score
 		let minTime = Storage.query('SELECT MIN("time") AS minTime FROM user_eggs WHERE mission_id = @missionId;').get({ missionId: missionId });

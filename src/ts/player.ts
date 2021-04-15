@@ -8,10 +8,12 @@ import { Util } from "./util";
 
 export class Player {
 
+	// Check if a user exists
 	static userExists(username: string) {
 		return Storage.query(`SELECT id FROM users WHERE username=@username;`).get({ username: username }) !== undefined;
 	}
 
+	// Gets the username for the user id, if user doesnt exist, you get null
 	static getUsername(userId: number) {
 		let data = Storage.query(`SELECT username FROM users WHERE id=@userId`).get({ userId: userId });
 		if (data === undefined)
@@ -19,6 +21,7 @@ export class Player {
 		return data.username;
 	}
 
+	// Gets the user id for the given username, if user doesnt exist, you get null
 	static getUserId(username: string) {
 		let data = Storage.query(`SELECT id FROM users WHERE username=@username`).get({ username: username });
 		if (data === undefined)
@@ -26,6 +29,7 @@ export class Player {
 		return data.id;
 	}
 
+	// Register a user
 	static registerUser(email: string, username: string, password: string) {
 
 		if (email === "" || username === "" || password.length < 8) { // Disallow empty usernames, emails and less than 8 character passwords
@@ -42,6 +46,7 @@ export class Player {
 			};
 		}
 		
+		// Do the hash
 		let hash = bcrypt.hashSync(password, 10);
 		let query = Storage.query(`INSERT INTO users ("name", "username", "email", "password", "block", "sendEmail", "registerDate", "lastvisitDate", "activation", "params", "lastResetTime", "resetCount", "bluePoster", "hasColor", "colorValue", "titleFlair", "titlePrefix", "titleSuffix", "statusMsg", "profileBanner", "donations", "credits", "credits_spent", "otpKey", "otep", "requireReset", "webchatKey", "onlineTime") VALUES (@username, @username, @email, @password, '0', '0', DATETIME('now','localtime'), DATETIME('now','localtime'), '', '', DATETIME('now','localtime'), '0', '0', '0', '000000', '0', '0', '0', '', '0', '0.0', '0', '0', '', '', '0', @token, '0');`);
 		let result = query.run({ username: username, email: email, password: hash, token: Player.strRandom(20) });
@@ -61,6 +66,7 @@ export class Player {
 		}
 	}
 
+	// Authenticate a user and generate necessary response.
 	static checkLogin(username: string, password: string, ip: string) {
 		password = this.deGarbledeguck(password);
 
@@ -140,11 +146,13 @@ export class Player {
 		}
 	}
 
+	// Gets the list of friends for a user
 	static getFriendsList(userid: number) {
 		let friendlist = Storage.query(`SELECT name, username FROM user_friends A, users B WHERE user_id=@userid AND friend_id=B.id;`).all({ userid: userid });
 		return friendlist;
 	}
 
+	// Gets the list of blocked users for a user
 	static getBlockList(userid: number) {
 		let blockist = Storage.query(`SELECT name, username FROM user_blocks A, users B WHERE user_id=@userid AND block_id=B.id;`).all({ userid: userid });
 		return blockist;
@@ -161,6 +169,7 @@ export class Player {
 		return null;
 	}
 
+	// Get the top players in the leaderboards
 	static getTopPlayers() {	
 		let formatRating = (category: string) => {
 			let ratingQuery = Storage.query(`SELECT U.name, U.username, ${category} AS rating FROM user_ratings AS R, users AS U WHERE U.id = R.user_id AND U.block = 0 ORDER BY ${category} DESC;`);
@@ -185,6 +194,7 @@ export class Player {
 		return result;
 	}
 
+	// Gets the list of achievements for a given player
 	static getPlayerAchievements(username: string) {
 		let userId = Player.getUserId(username);
 		let achievementList = Storage.query(`SELECT achievement_id FROM user_achievements WHERE user_id = @userId;`).all({ userId: userId }).map(x => x.achievement_id);
@@ -195,23 +205,30 @@ export class Player {
 		return obj;
 	}
 
+	// Gets the player profile info for a given player
 	static getPlayerProfileInfo(username: string) {
 		let userId = Player.getUserId(username);
+
+		// Get the initial data in one query
 		let initialData = Storage.query("SELECT accessLevel AS access, registerDate, colorValue AS color, donations, id, statusMsg AS status, titleFlair, titlePrefix, titleSuffix, username, name, onlineTime FROM users WHERE id = @userId;").get({ userId: userId });
 
+		// The date stuff
 		let registerDate = new Date(Date.parse(initialData.registerDate));
 		let today = new Date();
-
 		let span = new Date(today.getTime() - registerDate.getTime());
-
 		let accountAge = `${span.getFullYear() - 1970} Years ${span.getMonth()} Months ${span.getDate()} Days ${span.getHours()} Hours ${span.getMinutes()} Minutes ${span.getSeconds()} Seconds`;
+
+		// Friend list
 		let friends = Player.getFriendsList(userId);
 
+		// Last level
 		let lastLevel = Storage.query("SELECT missions.name FROM user_scores, missions WHERE user_id = @userId AND missions.id = user_scores.mission_id ORDER BY timestamp DESC LIMIT 1;").get({ userId: userId });
 		if (lastLevel === undefined)
 			lastLevel = "No Level Played!";
 		else
 			lastLevel = lastLevel.name;
+		
+		// Multiplayer related data
 		let mpAverage = Storage.query("SELECT ROUND(AVG(score)) AS averageMP FROM match_scores, user_scores WHERE match_scores.user_id = @userId AND match_scores.score_id = user_scores.id AND score_type = 'score';").get({ userId: userId });
 		if (mpAverage === undefined)
 			mpAverage = "No Recorded Matches";
@@ -249,6 +266,8 @@ export class Player {
 				platinum: 0
 			}
 		}
+
+		// Now for the rating data
 		let rating = Storage.query("SELECT * FROM user_ratings WHERE user_id = @userId").get({ userId: userId });
 		let ranking = Storage.query(`
 		SELECT * FROM
@@ -268,11 +287,15 @@ export class Player {
 			FROM user_ratings
 		)
 		WHERE user_id = @userId;`).get({ userId: userId });
+
+		// Flair data
 		let flair: string;
 		let flairId = initialData.titleFlair !== null ? Number.parseInt(initialData.titleFlair) : 0;
 		if (Storage.settings.chat_flairs.length > flairId) {
 			flair = Storage.settings.chat_flairs[flairId];
 		}
+
+		// Now combine it all up and serve it
 		let obj = {
 			access: initialData.access,
 			accountAge: accountAge,
@@ -303,19 +326,26 @@ export class Player {
 		return obj;
 	}
 
+	// Gets the player statistical data
 	static getPlayerStats(username: string) {
 		let userId = Player.getUserId(username);
+
+		// Get the game data
 		let gameIdData = Storage.query(`SELECT name, id FROM mission_games WHERE game_type = 'Single Player' AND disabled = 0;`).all();
 		let gameIds = new Map<string, number>();
 		gameIdData.forEach(x => {
 			gameIds.set(x.name, x.id);
 		})
+
+		// Grand total
 		let grandTotal = Storage.query("SELECT SUM(score) AS grandTotal FROM user_scores WHERE user_id = @userId AND user_scores.disabled = 0 AND score_type='time';").get({ userId: userId });
 		if (grandTotal === undefined) {
 			grandTotal = "0";
 		} else {
 			grandTotal = grandTotal.grandTotal;
 		}
+		
+		// Overall rating data
 		let ratingRankdata = Storage.query(`SELECT rating_general, rank FROM (SELECT rating_general, RANK() OVER (ORDER BY rating_general DESC) AS 'rank', user_id FROM user_ratings) WHERE user_id = @userId;`).get({ userId: userId });
 		if (ratingRankdata === undefined) {
 			ratingRankdata = {
@@ -326,6 +356,7 @@ export class Player {
 		let rating = ratingRankdata.rating_general;
 		let rank = ratingRankdata.rank;
 
+		// Total time 
 		let totalTime = Storage.query(`
 		SELECT SUM(score) AS totalTime
 		FROM (
@@ -353,6 +384,7 @@ export class Player {
 			totalBonus = totalBonus.totalBonus;
 		}
 
+		// Now generate the statistics for each game
 		let gameStats = new Map<number, any>();
 		gameIdData.forEach(game => {
 			let gameData = Storage.query(`
@@ -471,6 +503,8 @@ export class Player {
 			WHERE missions.game_id = @gameId AND missions.difficulty_id = mission_difficulties.id AND mission_difficulties.disabled = 0 AND missions.id != 392
 			GROUP BY difficulty_id;`).all({ gameId: game.id });
 			
+
+			// Iterate over all difficulties and generate data for those
 			let difficultyData = [] as any[];
 			difficultyInitialData.forEach(diff => {
 				let difficultyTotalTime = Storage.query(`
@@ -526,6 +560,7 @@ export class Player {
 				difficultyData.push(difficulty);
 			})
 
+			// Combine it all up, whew this is huge
 			let gameElement = {
 				awesome_time_name: gameData.awesome_time_name,
 				ultimate_time_name: gameData.ultimate_time_name,
@@ -559,9 +594,11 @@ export class Player {
 			gameStats.set(game.id, gameElement);
 		});
 
+		// Lastly, the display name
 		let displayName = Storage.query("SELECT name FROM users WHERE id=@userId").get({ userId: userId });
 		displayName = displayName.name;
 
+		// And finally serve it
 		let obj = {
 			display: displayName,
 			gameIds: Object.fromEntries(gameIds),
@@ -580,6 +617,7 @@ export class Player {
 		return obj;
 	}
 
+	// Get the player avatar for a given player
 	static getPlayerAvatar(username: string) {
 		let userId = Player.getUserId(username);
 		if (fs.existsSync(path.join(__dirname, 'storage', 'avatars', `${userId}.png`))) {
@@ -588,6 +626,7 @@ export class Player {
 			return Util.responseAsFile(path.join(__dirname, 'storage', 'avatars', `nophoto.png`));
 	}
 
+	// Helper function to decrypt the dumb encryption used by PQ
 	static deGarbledeguck(pwd: string) {
 		if (pwd.substr(0, 3) !== "gdg")
 			return pwd;
@@ -605,6 +644,7 @@ export class Player {
 		return Array.from(finish).reverse().join('');
 	}
 
+	// Generate a random string of n length
 	static strRandom(length: number) {
 		var result           = '';
 		var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

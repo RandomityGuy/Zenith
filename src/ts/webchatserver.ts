@@ -4,36 +4,54 @@ import { Player } from "./player";
 import { Storage } from "./storage"
 import { WebchatInfo, WebchatResponse, WebchatUser } from "./webchat";
 
+// A webchat player
 class WebchatPlayer {
+
+	// The socket used by the player
 	socket: net.Socket;
+	// The session string of the player
 	session: string;
 
+	// The user id of the player
 	userId: number = null;
+	// The username of the player
 	username: string;
+	// The display name of the player
 	display: string;
+	// The access level of the player
 	accessLevel: number = 0;
+	// The game version of the player
 	gameVersion: number;
 
+	// The prefix
 	titlePrefix: string;
+	// The suffix
 	titleSuffix: string;
 
+	// Data used for ping time calculation
 	pingTime: number;
 	pingInitial: number;
 
+	// The status number of the player
 	status: number = 0;
 	
+	// Whether the player is guest or not
 	isGuest: boolean = false;
 
+	// Data,
 	rawReceivedData: string = "";
 
+	// Blocked users
 	blockList: Set<string> = new Set<string>();
 
+	// The time when the user connected to the server
 	connectTime: Date;
 
 	constructor(socket: net.Socket) {
 		this.socket = socket;
 	}
 
+	// Send data to the player
 	send(response: WebchatResponse) {
 		response.getResult().forEach(x => this.socket.write(x + "\n"));
 	}
@@ -44,6 +62,7 @@ export class WebchatServer {
 
 	clients: Set<WebchatPlayer>
 
+	// Start up the webchat server
 	initialize() {
 		// We assume the settings are already loaded, if not, then we explode into a million pieces
 		let hostsplit = Storage.settings.webchatServer.split(':'); // Naive but works for now
@@ -56,6 +75,7 @@ export class WebchatServer {
 		this.clients = new Set<WebchatPlayer>();
 	}
 
+	// Received when a player connects
 	onConnect(socket: net.Socket) {
 		let player = new WebchatPlayer(socket);
 		player.connectTime = new Date();
@@ -67,8 +87,10 @@ export class WebchatServer {
 		socket.on('error', (err) => this.onError(player, err));
 	}
 
+	// Received when a pleyer disconnects
 	onDisconnect(player: WebchatPlayer, hadError: boolean) {
 		// Bye bye!
+		// Update the total time online
 		if (player.userId !== null) {
 			let seconds = Math.floor((new Date().getTime() - player.connectTime.getTime()) / 1000);
 			Storage.query("UPDATE users SET onlineTime = @time WHERE id=@userId;").run({ time: seconds, userId: player.userId });
@@ -76,6 +98,7 @@ export class WebchatServer {
 		this.clients.delete(player);
 	}
 
+	// Received when a player errors out
 	onError(player: WebchatPlayer, error: Error) {
 		if (player.userId !== null) {
 			let seconds = Math.floor((new Date().getTime() - player.connectTime.getTime()) / 1000);
@@ -85,6 +108,7 @@ export class WebchatServer {
 		this.clients.delete(player);
 	}
 
+	// Handles the incoming data and splits it by newlines and calls onData for each newline
 	onDataRaw(player: WebchatPlayer, data: Buffer) {
 		let datastr = data.toString();
 		player.rawReceivedData += datastr;
@@ -95,10 +119,12 @@ export class WebchatServer {
 		}
 	}
 
+	// Handles the actual logic of what to do when data is received
 	onData(player: WebchatPlayer, data: string) {
 		let parts = data.split(' ');
 		let command = parts[0];
 
+		// Identify the player
 		if (command === "IDENTIFY") {
 			player.username = parts[1];
 			if (player.username === "Guest") {
@@ -108,14 +134,17 @@ export class WebchatServer {
 			}
 		}
 
+		// Verify the player, authentication stuff
 		if (command === "VERIFY") {
 			this.handleLogin(player, parts);
 		}
 
+		// Set the session data
 		if (command === "SESSION") {
 			player.session = parts[1];
 		}
 
+		// Ping, part 1
 		if (command === "PING") {
 			let response = new WebchatResponse();
 			player.pingInitial = new Date().getTime();
@@ -123,6 +152,7 @@ export class WebchatServer {
 			player.send(response);
 		}
 
+		// Ping, part 2
 		if (command === "PONG") {
 			player.pingTime = new Date().getTime() - player.pingInitial;
 			let response = new WebchatResponse();
@@ -130,12 +160,14 @@ export class WebchatServer {
 			player.send(response);
 		}
 
+		// Set the status of the player
 		if (command === "LOCATION") {
 			player.status = Number.parseInt(parts[1]);
 			this.notifyUserUpdate();
 			this.notifyStatusChange(player);
 		}
 
+		// Add a friend
 		if (command === "FRIEND") {
 			let friendId = Player.getUserId(parts[1]);
 			Storage.query("REPLACE INTO user_friends(user_id,friend_id) VALUES (@userId,@friendId);").run({ userId: player.userId, friendId: friendId });
@@ -144,6 +176,7 @@ export class WebchatServer {
 			player.send(response);
 		}
 
+		// Delete a friend
 		if (command === "FRIENDDEL") {
 			let friendId = Player.getUserId(parts[1]);
 			Storage.query("DELETE FROM user_friends WHERE user_id = @userId AND friend_id = @friendId);").run({ userId: player.userId, friendId: friendId });
@@ -152,6 +185,7 @@ export class WebchatServer {
 			player.send(response);
 		}
 
+		// Block a user
 		if (command === "BLOCK") {
 			let blockId = Player.getUserId(parts[1]);
 			Storage.query("REPLACE INTO user_blocks(user_id,block_id) VALUES (@userId,@blockId);").run({ userId: player.userId, blockId: blockId });
@@ -160,6 +194,7 @@ export class WebchatServer {
 			player.send(response);
 		}
 
+		// Unblock a user
 		if (command === "UNBLOCK") {
 			let blockId = Player.getUserId(parts[1]);
 			Storage.query("DELETE FROM user_blocks WHERE user_id = @userId AND block_id = @blockId);").run({ userId: player.userId, blockId: blockId });
@@ -168,6 +203,7 @@ export class WebchatServer {
 			player.send(response);
 		}
 
+		// Get the friend list
 		if (command === "FRIENDLIST") {
 			let response = new WebchatResponse();
 			let friendlist = Player.getFriendsList(player.userId);
@@ -177,6 +213,7 @@ export class WebchatServer {
 			player.send(response);
 		}
 
+		// Disconnect
 		if (command === "DISCONNECT") {
 			if (player.userId !== null) {
 				let seconds = Math.floor((new Date().getTime() - player.connectTime.getTime()) / 1000);
@@ -186,16 +223,19 @@ export class WebchatServer {
 			player.socket.destroy();
 		}
 
+		// Chat
 		if (command === "CHAT") {
 			let dest = parts[1];
 			if (!this.handleChatCommand(player, parts[2], parts.slice(3))) {
 				let conts = parts.slice(2).join(' ');
 				let response = new WebchatResponse();
 				response.chat(player.username, player.display, dest, player.accessLevel, conts);
+				// Send to proper destinations
 				if (dest === "") {
 					this.clients.forEach(x => x.send(response));
 				} else {
 					for (let client of this.clients) {
+						// Don't do it for blocked users
 						if (client.username === dest || client.display === dest && !client.blockList.has(player.username)) {
 							client.send(response);
 						}
@@ -206,6 +246,7 @@ export class WebchatServer {
 
 	}
 
+	// Authentication stuff
 	handleLogin(player: WebchatPlayer, parts: string[]) {
 		player.gameVersion = Number.parseInt(parts[1]);
 		let pwd = parts[2];
@@ -302,6 +343,7 @@ export class WebchatServer {
 		}
 	}
 
+	// Handles chat commands, currently one command
 	handleChatCommand(sender: WebchatPlayer,command: string, context: string[]) {
 		if (command === "/ping") {
 			let response = new WebchatResponse();
@@ -312,6 +354,7 @@ export class WebchatServer {
 		return false;
 	}
 
+	// Verifies a player session
 	verifyPlayerSession(username: string, session: string) {
 		for (let client of this.clients) {
 			if (client.username === username && client.session === session)
@@ -320,6 +363,7 @@ export class WebchatServer {
 		return false;
 	}
 
+	// Notifies everyone a player has joined
 	notifyJoin(player: WebchatPlayer) {
 		let response = new WebchatResponse();
 		this.generateUserList(response);
@@ -328,6 +372,7 @@ export class WebchatServer {
 		this.clients.forEach(x => x.send(response));
 	}
 
+	// Notifies everyone a player has left
 	notifyLeave(player: WebchatPlayer) {
 		let response = new WebchatResponse();
 		this.generateUserList(response);
@@ -336,18 +381,21 @@ export class WebchatServer {
 		this.clients.forEach(x => x.send(response));
 	}
 
+	// Sends user details to everyone again cause someone updated their data
 	notifyUserUpdate() {
 		let response = new WebchatResponse();
 		this.generateUserList(response);
 		this.clients.forEach(x => x.send(response));
 	}
 
+	// Notifies everyone about a status change of a user
 	notifyStatusChange(player: WebchatPlayer) {
 		let response = new WebchatResponse();
 		response.notify("setlocation", player.username, player.display, [player.status.toString()]);
 		this.clients.forEach(x => x.send(response));
 	}
 	
+	// Gets the full display name with prefix suffix for a user
 	getFullDisplayName(player: WebchatPlayer) {
 		let name = "";
 		if (player.titlePrefix !== null && player.titlePrefix !== "")
@@ -358,6 +406,7 @@ export class WebchatServer {
 		return WebchatResponse.encodeName(name);
 	}
 
+	// Generates the user list data for a response
 	generateUserList(response: WebchatResponse) {
 		let groups = [
 			{ access: -3, order: 0, display: "Banned Users", altDisplay: "Banned" },

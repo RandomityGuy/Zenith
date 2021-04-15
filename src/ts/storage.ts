@@ -50,6 +50,7 @@ export class Storage {
 		this.queryCache = new Map<string, Database.Statement>();
 	}
 
+	// Used to create queries for the sqlite database, with caching
 	static query(queryString: string) {
 		if (Storage.queryCache.has(queryString))
 			return Storage.queryCache.get(queryString);

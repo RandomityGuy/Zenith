@@ -4,6 +4,7 @@ import * as path from 'path'
 
 export class Util {
 
+    // Read a file and generate the valid response data for the file to be sent to PQ
     static responseAsFile(filepath: string) {
         let data = fs.readFileSync(filepath, { encoding: 'binary' });
         

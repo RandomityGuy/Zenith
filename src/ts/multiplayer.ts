@@ -27,6 +27,7 @@ export interface MatchTeam {
 }
 export class Multiplayer {
 
+	// Store details of a multiplayer match
 	static recordMatch(userId: number, missionId: number, address: string, port: number, scoreType: string, totalBonus: number, modes: string, teams: MatchTeam[], scores: MatchScore[]) {
 		// Input the initial match data
 		Storage.query(`INSERT INTO matches(mission_id,player_count,team_count,rating_multiplier,server_address,server_port,dedicated) VALUES (@missionId, @playerCount, @teamCount, '1.0', @address, @port, '0');`).run({ missionId: missionId, playerCount: scores.length, teamCount: teams.length, address: address, port: port });

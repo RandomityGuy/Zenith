@@ -1,8 +1,9 @@
 import { Player } from "./player";
 import { Score } from "./score";
 import { Storage } from "./storage";
-
 export class Achievement {
+
+	// Gets the list of all achievements
 	static getAchievementList() {
 		let categoriesDict = new Map<string, any>();
 		let categoryNames: string[] = [];
@@ -26,6 +27,7 @@ export class Achievement {
 		return obj;
 	}
 
+	// Record a manual achievement for a given user id
 	static recordAchievement(userId: number, achievementId: number) {
 		let achievementData = Storage.query("SELECT manual FROM achievement_names WHERE id = @achievementId;").get({ achievementId: achievementId });
 		if (achievementData === undefined) {

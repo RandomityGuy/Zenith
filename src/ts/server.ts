@@ -316,7 +316,7 @@ export class PQServer {
 		if (userId === null) {
 			return "FAILURE NEEDLOGIN";
 		} else {
-			let obj = Marble.getCurrentMarble(req.searchParams.get("username"), req.searchParams.get("key"));
+			let obj = Marble.getCurrentMarble(userId);
 			return obj;
 		}
 	}
@@ -329,8 +329,13 @@ export class PQServer {
 			return "ARGUMENT key";
 		if (!req.searchParams.has("marbleId"))
 			return "ARGUMENT marbleId";
-		let res = Marble.recordMarbleSelection(req.searchParams.get("username"), req.searchParams.get("key"), Number.parseInt(req.searchParams.get("marbleId")));
-		return res ? "SUCCESS" : "FAILURE";
+		let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+		if (userId === null) {
+			return "FAILURE NEEDLOGIN";
+		} else {
+			let res = Marble.recordMarbleSelection(userId, Number.parseInt(req.searchParams.get("marbleId")));
+			return res ? "SUCCESS" : "FAILURE";
+		}
 	}
 
 	// ACHIEVEMENT

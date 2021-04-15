@@ -49,6 +49,8 @@ interface RatingInfo {
 };
 
 export class Score {
+
+	// Get the top scores of all levels along with some additional data such as lap times, quota100 scores and the WR list for a given user.
 	static getPersonalTopScoreList(userId: number) {
 		let topScoresData = Storage.query("SELECT mission_id, score, score_type FROM user_scores WHERE user_id = @userId AND user_scores.disabled = 0 GROUP BY mission_id HAVING sort = MIN(sort);").all({ userId: userId });
 		let lapTimes = Storage.query("SELECT mission_id, time as 'score', 'time' as score_type FROM user_lap_times WHERE user_id = @userId GROUP BY mission_id HAVING MIN(time);").all({ userId: userId })
@@ -88,6 +90,7 @@ export class Score {
 		return obj;
 	}
 
+	// Gets the top scores for a given player on a mission
 	static getPersonalTopScores(userId: number, missionId: number, modifiers: number | null = null) {
 		let scoreData = Storage.query("SELECT * FROM user_scores WHERE user_id = @userId AND mission_id = @missionId AND user_scores.disabled = 0 ORDER BY sort;").all({ userId: userId, missionId: missionId });
 		let obj = {
@@ -97,6 +100,7 @@ export class Score {
 		return obj;
 	}
 
+	// Gets the leaderboards for a given mission, with the modifiers
 	static getGlobalTopScores(missionId: number, modifiers: number = 0) {
 		let scoreData = Storage.query("SELECT gem_count, gems_1_point, gems_2_point, gems_5_point, gems_10_point, user_scores.id, modifiers, users.name, users.username, origin, row_number() OVER (ORDER BY sort) AS placement, rating, score, score_type, timestamp, total_bonus, user_id FROM user_scores, users WHERE mission_id = @missionId AND users.id = user_scores.user_id AND (modifiers & @modifier = @modifier) AND disabled = 0 GROUP BY user_id").all({ missionId: missionId, modifier: modifiers });
 		let spcolumnData = [
@@ -120,6 +124,7 @@ export class Score {
 		return obj;
 	}
 
+	// Gets the leaderboards for egg scores, lap time scores, quota100 scores and double diamond scores for a given mission
 	static getTopScoreModes(missionId: number) {
 		let columnData = [
 			{ name: "placement", display: "#", type: "place", tab: "1", width: "40" },
@@ -157,6 +162,7 @@ export class Score {
 		return obj;
 	}
 
+	// Save a score to the leaderboards
 	static recordScore(userId: number, missionId: number, score: number, scoreType: string, modifiers: number, totalBonus: number, gemCount: number, gems1: number, gems2: number, gems5: number, gems10: number) {
 		// First get the best score of yours and the top score
 		let personalTopScore = Storage.query("SELECT * FROM user_scores WHERE user_id = @userId AND mission_id = @missionId AND user_scores.disabled = 0 ORDER BY sort;").get({ userId: userId, missionId: missionId });
@@ -405,6 +411,7 @@ export class Score {
 		return Score.getNullScoreRating(score, ratingInfo, modifiers);
 	}
 
+	// Save a lap time for a given mission and user.
 	static recordLapTime(userId: number, missionId: number, time: number)
 	{
 		let q = Storage.query("INSERT INTO user_lap_times(mission_id,user_id,time,timestamp) VALUES(@missionId,@userId,@time,DATETIME('now','localtime'));").run({ missionId: missionId, userId: userId, time: time });
