@@ -3,6 +3,7 @@ import * as url from 'url';
 import * as net from 'net';
 import * as fs from 'fs-extra'
 import * as path from 'path'
+import * as dgram from 'dgram';
 import { Storage } from "./storage"
 import { Marble } from './marble';
 import { Player } from './player';
@@ -216,29 +217,32 @@ export class PQServer {
 			return "ARGUMENT port";
 		let port = Number.parseInt(req.searchParams.get("port"));
 
-		let conn = net.connect(port, req.request.socket.remoteAddress);
+		let socket = dgram.createSocket('udp4');
 		
 		let promises = [];
 
 		let p1 = new Promise((resolve: (status: string) => void, reject) => {
-			conn.on('error', () => {
+			socket.on('error', () => {
 				resolve("PORT FAILURE");
 			});
 		})
 
 		let p2 = new Promise((resolve: (status: string) => void, reject) => {
-			conn.on('timeout', () => {
+			socket.on('timeout', () => {
 				resolve("PORT FAILURE");
 			});
 		})
 
 		let p3 = new Promise((resolve: (status: string) => void, reject) => {
-			conn.on('connect', () => {
+			socket.on('connect', () => {
 				// We can connect it yeah lets destroy it now
-				conn.destroy();
+				socket.disconnect();
+				socket.close();
 				resolve("PORT SUCCESS");
 			});
 		})
+
+		socket.connect(port, req.request.socket.remoteAddress);
 
 		let obj = "PORT FAILURE";
 
