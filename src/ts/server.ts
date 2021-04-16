@@ -15,6 +15,7 @@ import { Score } from './score';
 import { Achievement } from './achievement';
 import { Replay } from './replay';
 import { MatchScore, MatchTeam, Multiplayer } from './multiplayer';
+import { AchievementEvent } from './achievement_event';
 
 // A class to store incoming web request data
 class WebRequest {
@@ -817,6 +818,10 @@ export class PQServer {
 
 		
 		Storage.query("INSERT INTO user_event_triggers VALUES(@userId,@trigger,DATETIME('now','localtime'));").run({ userId: userId, trigger: trigger });
+		
+		// Do this gay shit
+		AchievementEvent.updateHalloweenAchievements(userId);
+		AchievementEvent.updateWinterAchievements(userId);
 		
 		let obj = triggerCount;
 		return obj;

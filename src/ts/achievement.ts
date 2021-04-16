@@ -64,4 +64,161 @@ export class Achievement {
 		return false;
 	}
 
+	// Award a player a title or flair
+	static grantTitleFlair(userId: number, titleFlairId: number) {
+		Storage.query('REPLACE INTO user_title_flairs VALUES(@userId, @titleFlairId)').run({ userId: userId, titleFlairId: titleFlairId });
+	}
+
+	// Check for title and flair unlocks
+	static checkTitleFlairUnlocks(userId: number) {
+
+		let topScores = Score.getPersonalTopScoreList(userId);
+		let username = Player.getUsername(userId);
+		let playerAchievements = Player.getPlayerAchievements(username).achievements;
+		let currentAchievements = new Set(playerAchievements);
+
+		function bestModifiers(missionId: number, modifiers: number) {
+			let score = Storage.query("SELECT * FROM user_scores WHERE user_id = @userId AND mission_id = @missionId AND user_scores.disabled = 0 AND (modifiers & @modifiers = @modifiers) ORDER BY sort;").get({ userId: userId, missionId: missionId, modifiers: modifiers });
+			if (score === undefined) {
+				return 6000000;
+			}
+			return score.score;
+		}
+
+		function best(missionId: number) {
+			if (topScores[missionId] === undefined) {
+				return 6000000
+			}
+			return topScores[missionId].score;
+		}
+
+		function levelBased(levelId: number, score: number, titleFlair: number) {
+			if (best(levelId) <= score) {
+				Achievement.grantTitleFlair(userId, titleFlair);
+			}
+		}
+
+		// Double diamond
+		if (bestModifiers(17, Score.modifierFlags.doubleDiamond | Score.modifierFlags.noTimeTravels) < 70000) {
+			Achievement.grantTitleFlair(userId, 109);
+		}
+
+		// Spacestation
+		levelBased(106, 360000, 62);
+		
+		// Great Divide
+		levelBased(202, 18500, 105);
+
+		// All the PQ achievement based
+		if (currentAchievements.has(125))
+			Achievement.grantTitleFlair(userId, 213);
+		if (currentAchievements.has(127))
+			Achievement.grantTitleFlair(userId, 214);
+		if (currentAchievements.has(128))
+			Achievement.grantTitleFlair(userId, 215);
+		if (currentAchievements.has(130))
+			Achievement.grantTitleFlair(userId, 216);
+		if (currentAchievements.has(136) && currentAchievements.has(137))
+			Achievement.grantTitleFlair(userId, 218);
+		if (currentAchievements.has(133))
+			Achievement.grantTitleFlair(userId, 231);
+		if (currentAchievements.has(140))
+			Achievement.grantTitleFlair(userId, 225);
+		if (currentAchievements.has(146))
+			Achievement.grantTitleFlair(userId, 226);
+		if (currentAchievements.has(142) && currentAchievements.has(150))
+			Achievement.grantTitleFlair(userId, 227);
+		if (currentAchievements.has(138))
+			Achievement.grantTitleFlair(userId, 228);
+		if (currentAchievements.has(130))
+			Achievement.grantTitleFlair(userId, 212);
+
+		if (playerAchievements.every(x => [125, 126, 127, 128, 131, 132, 133, 134, 135, 136, 137, 138, 140, 141, 142, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155].includes(x))) {
+			Achievement.grantTitleFlair(userId, 229);
+
+			let q = Storage.query(`
+				SELECT COUNT(*) AS eggcount FROM (
+				SELECT user_eggs.mission_id FROM user_eggs
+				JOIN missions ON user_eggs.mission_id = missions.id
+				JOIN mission_rating_info ON missions.id = mission_rating_info.mission_id
+				WHERE user_id = @userId
+				  AND has_egg
+				  AND mission.game_id = 4
+				  AND disabled = 0
+                  AND normally_hidden = 0
+				GROUP BY user_eggs.mission_id
+			) AS egg_missions`).get({ userId: userId });
+			
+			if (q.eggcount === 53) {
+				q = Storage.query(`
+					SELECT
+					-- Count of all challenge scores/times except PHP knows what the bit flags are
+				    SUM(CASE WHEN modifiers & @modifiers != 0 THEN 1 ELSE 0 END) AS ultimate_count
+				FROM (
+					-- Need to get first score id with this score as otherwise this will return
+					-- 2 rows if someone gets the same time twice.
+				    SELECT
+				        bests.mission_id, MIN(user_scores.id) AS first
+				    FROM (
+				        -- Select all scores
+				        SELECT user_scores.mission_id, MIN(sort) AS minSort
+				        FROM user_scores
+				        JOIN missions ON user_scores.mission_id = missions.id
+				        JOIN mission_rating_info ON missions.id = mission_rating_info.mission_id
+				        WHERE user_id = @userId
+				        AND game_id = 4
+						AND mission_rating_info.disabled = 0
+                        AND mission_rating_info.normally_hidden = 0
+				        GROUP BY mission_id
+				    ) AS bests
+				    -- Join the scores table so we can get the id of the score
+				    JOIN user_scores
+				      ON user_scores.mission_id = bests.mission_id
+				     AND user_scores.sort = bests.minSort
+				    GROUP BY mission_id
+				) AS uniques
+				-- Join the scores table again so we can get score info
+				JOIN user_scores ON user_scores.id = first
+				JOIN missions ON uniques.mission_id = missions.id
+		        JOIN mission_rating_info ON missions.id = mission_rating_info.mission_id`).get({ modifiers: 4352, userId: userId }); // Modifiers are UltimateTime | UltimateScore.
+
+				if (q.ultimate_count === 138) {
+					Achievement.grantTitleFlair(userId, 230);
+				}
+			}
+		}
+
+		// Colored name
+		let q = Storage.query(`
+		SELECT COUNT(*) AS cnt FROM missions
+		  JOIN mission_games ON missions.game_id = mission_games.id
+		WHERE
+		  game_id != 5 -- Custom levels
+		  AND difficulty_id != 16 -- PQ Bonus
+		  AND game_type = 'Single Player' -- Ignore MP
+		  AND missions.id NOT IN (
+		    SELECT DISTINCT missions.id FROM missions
+		      JOIN user_scores ON missions.id = user_scores.mission_id
+		      JOIN mission_rating_info ON missions.id = mission_rating_info.mission_id
+		      JOIN mission_games ON missions.game_id = mission_games.id
+		    WHERE user_id = @userId
+		          AND game_type = 'Single Player' -- Ignore MP
+		          AND is_custom = 0 -- Duh
+		          AND game_id != 5 -- Custom levels
+		          AND difficulty_id != 16 -- PQ Bonus
+		          AND ((
+		            score_type = 'time' AND (score < platinum_time -- Beat platinum time
+		            OR platinum_time = 0 OR platinum_time IS NULL)
+		          ) OR (
+		            score_type = 'score' AND (score >= platinum_score -- Reached platinum score
+		            OR platinum_score = 0 OR platinum_score IS NULL)
+		          ))
+		  )`).get({ userId: userId });
+		
+		if (q.cnt === 0) {
+			Storage.query('UPDATE users SET hasColor=1 WHERE userId=@userId').run({ userId: userId });
+		}
+
+	}
+
 }

@@ -29,6 +29,12 @@ export class Player {
 		return data.id;
 	}
 
+	// Gets available titles and flairs a user has unlocked
+	static getTitleFlairs(userId: number, type: "flair" | "prefix" | "suffix") {
+		let data = Storage.query('SELECT value FROM title_flairs, users, user_title_flairs WHERE users.id = user_title_flairs.user_id AND users.id = @userId AND user_title_flairs.title_flair_id = title_flairs.id AND title_flairs.type = @type;').all({ userId: userId, type: type });
+		return data.map(x => x.value);
+	}
+
 	// Register a user
 	static registerUser(email: string, username: string, password: string) {
 

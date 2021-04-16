@@ -1,4 +1,6 @@
+import { AchievementEvent } from "./achievement_event";
 import { AchievementMP } from "./achievement_mp";
+import { Mission } from "./mission";
 import { Player } from "./player";
 import { Score } from "./score";
 import { Storage } from "./storage";
@@ -162,13 +164,19 @@ export class Multiplayer {
 				if (score.snowballs !== null) {
 					Storage.query(`INSERT INTO user_event_snowballs VALUES(@scoreId, @snowballs, @hits)`).run({ scoreId: scoreId, snowballs: score.snowballs, hits: score.snowballHits });
 				}
+
 			}
 			
 			retObj.push({ username: score.username, rating: totRating, change: rating, place: score.place });
 				
 		})
 
-		AchievementMP.UpdateMultiplayerAchievements(userId); // This is ew
+		scores.forEach(x => {
+			let playerId = Player.getUserId(x.username);
+			AchievementMP.UpdateMultiplayerAchievements(playerId); // This is ew
+			AchievementEvent.updateHalloweenAchievements(playerId);
+			AchievementEvent.updateWinterAchievements(playerId);
+		})
 
 		return retObj;
 	}
