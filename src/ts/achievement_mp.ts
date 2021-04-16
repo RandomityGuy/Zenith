@@ -8,9 +8,9 @@ export class AchievementMP {
 	static async UpdateMultiplayerAchievements(userId: number) {
 		// Most of these queries are just copied from the original php
 		let username = Player.getUsername(userId);
-		let currentAchievements = Player.getPlayerAchievements(username).achievements;
+		let currentAchievements = new Set(Player.getPlayerAchievements(username).achievements);
 
-		if (!currentAchievements.includes(46) || !currentAchievements.includes(57)) {
+		if (!currentAchievements.has(46) || !currentAchievements.has(57)) {
 			// MP win a non teams match, win 500 matches
 			let mpwincount = Storage.query(`
 		SELECT COUNT(*) AS mpWins FROM match_scores
@@ -31,18 +31,18 @@ export class AchievementMP {
 				mpwincount = 0;
 			}
 
-			if (!currentAchievements.includes(46) && mpwincount > 0) {
+			if (!currentAchievements.has(46) && mpwincount > 0) {
 				Achievement.grantAchievement(userId, 46);
 			}
 
-			if (!currentAchievements.includes(57) && mpwincount > 500) {
+			if (!currentAchievements.has(57) && mpwincount > 500) {
 				Achievement.grantAchievement(userId, 57);
 			}
 		}
 
 		// Win teams match
 		// Win 100 teams matches
-		if (!currentAchievements.includes(47) || !currentAchievements.includes(56)) {
+		if (!currentAchievements.has(47) || !currentAchievements.has(56)) {
 			let mpteamwincount = Storage.query(`
 		SELECT COUNT(*) AS mpWins FROM match_scores
 			JOIN user_scores ON match_scores.score_id = user_scores.id
@@ -62,17 +62,17 @@ export class AchievementMP {
 				mpteamwincount = 0;
 			}
 
-			if (!currentAchievements.includes(47) && mpteamwincount > 0) {
+			if (!currentAchievements.has(47) && mpteamwincount > 0) {
 				Achievement.grantAchievement(userId, 47);
 			}
 
-			if (!currentAchievements.includes(56) && mpteamwincount > 100) {
+			if (!currentAchievements.has(56) && mpteamwincount > 100) {
 				Achievement.grantAchievement(userId, 56);
 			}
 		}
 
 		// Win FFA on spires
-		if (!currentAchievements.includes(67)) {
+		if (!currentAchievements.has(67)) {
 			let spirewins = Storage.query(`
 		SELECT COUNT(*) AS mpWins
 			FROM match_scores
@@ -95,7 +95,7 @@ export class AchievementMP {
 			}
 		}
 
-		if (!currentAchievements.includes(61) || !currentAchievements.includes(62) || !currentAchievements.includes(63) || !currentAchievements.includes(64) || !currentAchievements.includes(65)) {
+		if (!currentAchievements.has(61) || !currentAchievements.has(62) || !currentAchievements.has(63) || !currentAchievements.has(64) || !currentAchievements.has(65)) {
 			// Achievement for gems
 			let mpGems = Storage.query("SELECT SUM(gems_1_point) AS red, SUM(gems_2_point) AS yellow, SUM(gems_5_point) AS blue, SUM(gems_10_point) AS platinum FROM match_scores, user_scores WHERE user_scores.id = match_scores.score_id AND user_scores.user_id = @userId").get({ userId: userId });
 			if (mpGems === undefined) {
@@ -106,29 +106,29 @@ export class AchievementMP {
 					platinum: 0
 				}
 			}
-			if (!currentAchievements.includes(61) && mpGems.red >= 5000) {
+			if (!currentAchievements.has(61) && mpGems.red >= 5000) {
 				Achievement.grantAchievement(userId, 61);
 			}
-			if (!currentAchievements.includes(62) && mpGems.yellow >= 2000) {
+			if (!currentAchievements.has(62) && mpGems.yellow >= 2000) {
 				Achievement.grantAchievement(userId, 62);
 			}
 
-			if (!currentAchievements.includes(63) && mpGems.blue >= 400) {
+			if (!currentAchievements.has(63) && mpGems.blue >= 400) {
 				Achievement.grantAchievement(userId, 63);
 			}
 
-			if (!currentAchievements.includes(64) && mpGems.red + mpGems.yellow + mpGems.blue + mpGems.platinum >= 15000) {
+			if (!currentAchievements.has(64) && mpGems.red + mpGems.yellow + mpGems.blue + mpGems.platinum >= 15000) {
 				Achievement.grantAchievement(userId, 64);
 			}
 		
-			if (!currentAchievements.includes(65) && mpGems.red + 2 * mpGems.yellow + 5 * mpGems.blue + 10 * mpGems.platinum >= 30000) {
+			if (!currentAchievements.has(65) && mpGems.red + 2 * mpGems.yellow + 5 * mpGems.blue + 10 * mpGems.platinum >= 30000) {
 				Achievement.grantAchievement(userId, 65);
 			}
 		}
 
 
 		// 12 players on kotm
-		if (!currentAchievements.includes(76)) {
+		if (!currentAchievements.has(76)) {
 			let KOTM12P = Storage.query(`
 		SELECT COUNT(*) AS kotm
 			FROM matches
@@ -151,7 +151,7 @@ export class AchievementMP {
 		}
 
 		// Beat hunt with <= 2 pts
-		if (!currentAchievements.includes(49)) {
+		if (!currentAchievements.has(49)) {
 			let lessthan2 = Storage.query(`
 		SELECT COUNT(*) AS lessthan
 		FROM match_scores AS score
@@ -183,7 +183,7 @@ export class AchievementMP {
 		}
 
 		// Beat hunt with >= 50 pts
-		if (!currentAchievements.includes(50)) {
+		if (!currentAchievements.has(50)) {
 			let gt50 = Storage.query(`
 		SELECT COUNT(*) AS gt
 		FROM match_scores AS score
@@ -215,7 +215,7 @@ export class AchievementMP {
 		}
 		
 		// Win match on all hunt levels
-		if (!currentAchievements.includes(51)) {
+		if (!currentAchievements.has(51)) {
 			let allhunt = Storage.query(`
 		SELECT COUNT(*) AS allhunt FROM missions
 		JOIN mission_games ON missions.game_id = mission_games.id
@@ -244,7 +244,7 @@ export class AchievementMP {
 		}
 
 		// Win FFA against 7 players
-		if (!currentAchievements.includes(53)) {
+		if (!currentAchievements.has(53)) {
 			let ffa7 = Storage.query(`
 		SELECT COUNT(*) AS ffa
 		FROM matches
@@ -270,7 +270,7 @@ export class AchievementMP {
 		}
 
 		// Win streak based
-		if (!currentAchievements.includes(54) || !currentAchievements.includes(55)) {
+		if (!currentAchievements.has(54) || !currentAchievements.has(55)) {
 			let streaks = Storage.query("SELECT * FROM user_streaks WHERE user_id = @userId").get({ userId: userId });
 			if (streaks === undefined) {
 				streaks = 0;
@@ -278,16 +278,16 @@ export class AchievementMP {
 				streaks = streaks.mp_games;
 			}
 
-			if (!currentAchievements.includes(54) && streaks >= 10) {
+			if (!currentAchievements.has(54) && streaks >= 10) {
 				Achievement.grantAchievement(userId, 54);
 			}
-			if (!currentAchievements.includes(55) && streaks >= 25) {
+			if (!currentAchievements.has(55) && streaks >= 25) {
 				Achievement.grantAchievement(userId, 55);
 			}
 		}
 
 		// All gold
-		if (!currentAchievements.includes(69)) {
+		if (!currentAchievements.has(69)) {
 			let ag = Storage.query(`
 		SELECT COUNT(*) AS ag FROM missions
 			JOIN mission_rating_info ON missions.id = mission_rating_info.mission_id
@@ -311,7 +311,7 @@ export class AchievementMP {
 		}
 
 		// All ultra
-		if (!currentAchievements.includes(70)) {
+		if (!currentAchievements.has(70)) {
 			let au = Storage.query(`
 		SELECT COUNT(*) AS ag FROM missions
 			JOIN mission_rating_info ON missions.id = mission_rating_info.mission_id
@@ -355,7 +355,7 @@ export class AchievementMP {
 
 		// 5 MP wins on these levels
 		if (
-			!currentAchievements.includes(68) &&
+			!currentAchievements.has(68) &&
 			numberOfWins("Core_Hunt") >= 5 &&
 			numberOfWins("Concentric_Hunt") >= 5 &&
 			numberOfWins("Battlecube_Hunt") >= 5 &&
@@ -368,7 +368,7 @@ export class AchievementMP {
 		}
 
 		// Win 4v4
-		if (!currentAchievements.includes(72)) {
+		if (!currentAchievements.has(72)) {
 			let versus4 = Storage.query(`
 		SELECT COUNT(*) AS wins FROM matches
 			JOIN match_scores ON matches.id = match_scores.match_id
@@ -394,7 +394,7 @@ export class AchievementMP {
 			}
 		}
 
-		if (!currentAchievements.includes(73)) {
+		if (!currentAchievements.has(73)) {
 			// Win on sprawl and horizon in teams
 			let winquery = Storage.query(`
 		SELECT COUNT(*) AS wins FROM matches
@@ -428,7 +428,7 @@ export class AchievementMP {
 		}
 
 		// Get lowest score on team by atleast half the next person
-		if (!currentAchievements.includes(74)) {
+		if (!currentAchievements.has(74)) {
 			let lwst = Storage.query(`
 		SELECT COUNT(*) AS lwst FROM match_scores AS score
 			JOIN matches ON score.match_id = matches.id
@@ -463,7 +463,7 @@ export class AchievementMP {
 		}
 
 		// Get highest points than teammates
-		if (!currentAchievements.includes(75)) {
+		if (!currentAchievements.has(75)) {
 			let hghstteam = Storage.query(`
 		SELECT COUNT(*) AS hghst FROM match_scores AS score
 			JOIN matches ON score.match_id = matches.id
@@ -497,7 +497,7 @@ export class AchievementMP {
 		}
 
 		// Get more points than everyone else
-		if (!currentAchievements.includes(78)) {
+		if (!currentAchievements.has(78)) {
 			let hghst = Storage.query(`
 		SELECT COUNT(*) AS hghst FROM match_scores AS score
 			JOIN matches ON score.match_id = matches.id
@@ -527,7 +527,7 @@ export class AchievementMP {
 		}
 
 		// Beat a guy over 225 points.
-		if (!currentAchievements.includes(79)) {
+		if (!currentAchievements.has(79)) {
 			let beat225 = Storage.query(`
 		SELECT COUNT(*) AS beat FROM match_scores AS score
 			JOIN matches ON score.match_id = matches.id
@@ -559,7 +559,7 @@ export class AchievementMP {
 		// Beat Matan
 		// Yeah no this aint happening. If you're a guy from the future reading this code, yeah no you are not allowed to use your time machine.
 
-		if (!currentAchievements.includes(81)) {
+		if (!currentAchievements.has(81)) {
 			let negativeScore = Storage.query(`
 		SELECT COUNT(*) AS neg FROM match_scores AS score
 		JOIN matches ON score.match_id = matches.id

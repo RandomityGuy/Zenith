@@ -7,7 +7,7 @@ export class AchievementSP {
     // Checks SP achievements
 	static async updateSinglePlayerAchievements(userId: number) {
 		let username = Player.getUsername(userId);
-		let currentAchievements = Player.getPlayerAchievements(username).achievements;
+		let currentAchievements = new Set(Player.getPlayerAchievements(username).achievements);
 		let topScores = Score.getPersonalTopScoreList(userId);
 
 		let eggCountQuery = Storage.query(`
@@ -20,7 +20,7 @@ export class AchievementSP {
 			HAVING MIN("time")
 		);`);
 
-		if (!currentAchievements.includes(1) || !currentAchievements.includes(2) || !currentAchievements.includes(32)) {	
+		if (!currentAchievements.has(1) || !currentAchievements.has(2) || !currentAchievements.has(32)) {	
 			let mbpeggcount = eggCountQuery.get({ userId: userId, gameId: 2 });
 			if (mbpeggcount !== undefined) {
 				mbpeggcount = mbpeggcount.eggCount;
@@ -47,22 +47,22 @@ export class AchievementSP {
 			}
 		
 			// Get atleast 1 egg
-			if (mbpeggcount + mbueggcount + pqeggcount + customeggcount > 0 && !currentAchievements.includes(1)) {
+			if (mbpeggcount + mbueggcount + pqeggcount + customeggcount > 0 && !currentAchievements.has(1)) {
 				Achievement.grantAchievement(userId, 1);
 			}
 
 			// All MBP eggs
-			if (mbpeggcount === 98 && !currentAchievements.includes(2)) {
+			if (mbpeggcount === 98 && !currentAchievements.has(2)) {
 				Achievement.grantAchievement(userId, 2);
 			}
 
 			// All MBU Eggs
-			if (mbueggcount === 20 && !currentAchievements.includes(32)) {
+			if (mbueggcount === 20 && !currentAchievements.has(32)) {
 				Achievement.grantAchievement(userId, 32);
 			}
 		}
 
-		if (!currentAchievements.includes(3) || !currentAchievements.includes(31) || !currentAchievements.includes(36)) {
+		if (!currentAchievements.has(3) || !currentAchievements.has(31) || !currentAchievements.has(36)) {
 			// Any level under par
 			let parCounts = Storage.query(`
 		SELECT COUNT(*) AS parScores, game_id
@@ -86,7 +86,7 @@ export class AchievementSP {
 			// Any MBP Par
 			let mbpPar = parCounts.find(x => x.game_id === 1);
 			if (mbpPar !== undefined) {
-				if (mbpPar.parScores > 0 && !currentAchievements.includes(3)) {
+				if (mbpPar.parScores > 0 && !currentAchievements.has(3)) {
 					Achievement.grantAchievement(userId, 3);
 				}
 			}
@@ -94,18 +94,18 @@ export class AchievementSP {
 			// Any MBU Par
 			let mbuPar = parCounts.find(x => x.game_id === 2);
 			if (mbuPar !== undefined) {
-				if (mbuPar.parScores > 0 && !currentAchievements.includes(31)) {
+				if (mbuPar.parScores > 0 && !currentAchievements.has(31)) {
 					Achievement.grantAchievement(userId, 31);
 				}
 
 				// All MBU Pars
-				if (mbuPar.parScores === 61 && !currentAchievements.includes(36)) {
+				if (mbuPar.parScores === 61 && !currentAchievements.has(36)) {
 					Achievement.grantAchievement(userId, 36);
 				}
 			}
 		}
 
-		if (!currentAchievements.includes(37)) {
+		if (!currentAchievements.has(37)) {
 			// All MBU UTs, query copied from player.ts so we can cache
 			let UTCount = Storage.query(`
 		SELECT COUNT(*) AS CTCount
@@ -136,7 +136,7 @@ export class AchievementSP {
 		}
 
 		function levelBased(levelId: number, score: number, achievement: number) {
-			if (!currentAchievements.includes(achievement) && best(levelId) < score) {
+			if (!currentAchievements.has(achievement) && best(levelId) < score) {
 				Achievement.grantAchievement(userId, achievement)
 			}
 		}
@@ -165,32 +165,32 @@ export class AchievementSP {
 		levelBased(40, 7250, 44); // earlyfrost_ultra
 
 		// Catwalks and Slowropes
-		if (!currentAchievements.includes(21) && best(117) < 95000 && best(107) < 150000) {
+		if (!currentAchievements.has(21) && best(117) < 95000 && best(107) < 150000) {
 			Achievement.grantAchievement(userId, 21);
 		}
 
 		// LearnTheSuperJump and ThereAndBackAgain
-		if (!currentAchievements.includes(22) && best(219) < 3500 && best(210) < 10000) {
+		if (!currentAchievements.has(22) && best(219) < 3500 && best(210) < 10000) {
 			Achievement.grantAchievement(userId, 22);
 		}
 
 		// Moto-Marblecross, MSQ and MS
-		if (!currentAchievements.includes(23) && best(193) < 4000 && best(194) < 20000 && best(195) < 15000) {
+		if (!currentAchievements.has(23) && best(193) < 4000 && best(194) < 20000 && best(195) < 15000) {
 			Achievement.grantAchievement(userId, 23);
 		}
 
 		// Shimmy, PathOfLeastResistance, Daedalus, Tango
-		if (!currentAchievements.includes(24) && best(248) < 3000 && best(256) < 10000 && best(275) < 15000 && best(241) < 13000) {
+		if (!currentAchievements.has(24) && best(248) < 3000 && best(256) < 10000 && best(275) < 15000 && best(241) < 13000) {
 			Achievement.grantAchievement(userId, 24);
 		}
 
 		// halfpipe2_ultra and halfpipe_ultra
-		if (!currentAchievements.includes(45) && best(54) < 1600 && best(36) < 1900) {
+		if (!currentAchievements.has(45) && best(54) < 1600 && best(36) < 1900) {
 			Achievement.grantAchievement(userId, 45);
 		}
 
 		// Beat any 3 of: Skyscraper, SOTF, GDR, TowerMaze, Battlements, NaturakSelection
-		if (!currentAchievements.includes(25)) {
+		if (!currentAchievements.has(25)) {
 			let c = (best(245) < 60000 ? 1 : 0) +
 				(best(242) < 30000 ? 1 : 0) +
 				(best(267) < 30000 ? 1 : 0) +
@@ -203,14 +203,14 @@ export class AchievementSP {
 		}
 
 		// Get a WR
-		if (!currentAchievements.includes(26)) {
+		if (!currentAchievements.has(26)) {
 			if (topScores.record.length > 0) {
 				Achievement.grantAchievement(userId, 26);
 			}
 		}
 
 		// Beat a lot of ultra levels cause bruh
-		if (!currentAchievements.includes(34)) {
+		if (!currentAchievements.has(34)) {
 			if (best(26) != 6000000 &&
 				best(38) != 6000000 &&
 				best(25) != 6000000 &&
@@ -250,7 +250,7 @@ export class AchievementSP {
 			}
 		}
 
-		if (!currentAchievements.includes(35)) {
+		if (!currentAchievements.has(35)) {
 			if (best(10) != 6000000 &&
 				best(18) != 6000000 &&
 				best(56) != 6000000 &&
@@ -274,37 +274,37 @@ export class AchievementSP {
 		}
 
 		// Special modifiers
-		if (!currentAchievements.includes(33) && bestModifiers(53, Score.modifierFlags.noJumping) < 30000) {
+		if (!currentAchievements.has(33) && bestModifiers(53, Score.modifierFlags.noJumping) < 30000) {
 			Achievement.grantAchievement(userId, 33);
 		}
 
-		if (!currentAchievements.includes(38) && bestModifiers(17, Score.modifierFlags.doubleDiamond | Score.modifierFlags.noTimeTravels) < 75000) {
+		if (!currentAchievements.has(38) && bestModifiers(17, Score.modifierFlags.doubleDiamond | Score.modifierFlags.noTimeTravels) < 75000) {
 			Achievement.grantAchievement(userId, 38);
 		}
 
-		if (!currentAchievements.includes(39) && bestModifiers(1, Score.modifierFlags.gotEasterEgg) < 25000) {
+		if (!currentAchievements.has(39) && bestModifiers(1, Score.modifierFlags.gotEasterEgg) < 25000) {
 			Achievement.grantAchievement(userId, 39);
 		}
 
 		// Rating based ones
 		let rating = Storage.query("SELECT * FROM user_ratings WHERE user_id = @userId").get({ userId: userId });
-		if (!currentAchievements.includes(27) && rating.rating_mbg > 7000000) {
+		if (!currentAchievements.has(27) && rating.rating_mbg > 7000000) {
 			Achievement.grantAchievement(userId, 27);
 		}
 
-		if (!currentAchievements.includes(28) && rating.rating_mbp > 12000000) {
+		if (!currentAchievements.has(28) && rating.rating_mbp > 12000000) {
 			Achievement.grantAchievement(userId, 28);
 		}
 
-		if (!currentAchievements.includes(29) && rating.rating_general > 30000000) {
+		if (!currentAchievements.has(29) && rating.rating_general > 30000000) {
 			Achievement.grantAchievement(userId, 29);
 		}
 		
-		if (!currentAchievements.includes(30) && rating.rating_general > 60000000) {
+		if (!currentAchievements.has(30) && rating.rating_general > 60000000) {
 			Achievement.grantAchievement(userId, 30);
 		}
 
-		if (!currentAchievements.includes(40) && rating.rating_mbu > 4000000) {
+		if (!currentAchievements.has(40) && rating.rating_mbu > 4000000) {
 			Achievement.grantAchievement(userId, 40);
 		}
 

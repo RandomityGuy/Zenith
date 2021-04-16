@@ -33,13 +33,14 @@ export class AchievementEvent {
 			return;
 		
 		let username = Player.getUsername(userId);
-		let currentAchievements = Player.getPlayerAchievements(username).achievements;
+		let playerAchievements = Player.getPlayerAchievements(username).achievements;
+		let currentAchievements = new Set(playerAchievements);
 		
-		if (!currentAchievements.includes(2000)) {
+		if (!currentAchievements.has(2000)) {
 			Achievement.grantAchievement(userId, 2000);
 		}
 
-		if (!currentAchievements.includes(2001) || !currentAchievements.includes(2002) || !currentAchievements.includes(2018)) {
+		if (!currentAchievements.has(2001) || !currentAchievements.has(2002) || !currentAchievements.has(2018)) {
 
 			let q = Storage.query(`
 		SELECT COUNT(*) AS matchcount FROM matches
@@ -65,7 +66,7 @@ export class AchievementEvent {
 				Achievement.grantAchievement(userId, 2018);
 			}
 		}
-		if (!currentAchievements.includes(2019)) {
+		if (!currentAchievements.has(2019)) {
 			let q = Storage.query(`
 		SELECT COUNT(*) AS matchcount FROM matches
 		  JOIN match_scores ON matches.id = match_scores.match_id
@@ -81,7 +82,7 @@ export class AchievementEvent {
 				Achievement.grantAchievement(userId, 2019);
 			}
 		}
-		if (!currentAchievements.includes(2003)) {
+		if (!currentAchievements.has(2003)) {
 			let q = Storage.query(`
 			SELECT COUNT(*) AS matchcount FROM missions
 			JOIN mission_games ON missions.game_id = mission_games.id
@@ -104,7 +105,7 @@ export class AchievementEvent {
 				Achievement.grantAchievement(userId, 2003);
 			}
 		}
-		if (!currentAchievements.includes(2004)) {
+		if (!currentAchievements.has(2004)) {
 			let q2 = Storage.query(`
 		SELECT * FROM user_scores
 		  JOIN missions ON user_scores.mission_id = missions.id
@@ -120,7 +121,7 @@ export class AchievementEvent {
 				Achievement.grantAchievement(userId, 2004);
 			}
 		}
-		if (!currentAchievements.includes(2005)) {
+		if (!currentAchievements.has(2005)) {
 			let q2 = Storage.query(`
 		SELECT * FROM user_scores
 		  JOIN missions ON user_scores.mission_id = missions.id
@@ -137,7 +138,7 @@ export class AchievementEvent {
 			}
 		}
 
-		if (!currentAchievements.includes(2008)) {
+		if (!currentAchievements.has(2008)) {
 			// Collect 16 total candy corns on halloween MP levels
 			let q = Storage.query(`
 		SELECT COUNT(*) AS candies FROM (
@@ -155,7 +156,7 @@ export class AchievementEvent {
 			}
 		}
 		
-		if (!currentAchievements.includes(2009)) {
+		if (!currentAchievements.has(2009)) {
 			let q = Storage.query(`
 		SELECT SUM(gem_count) AS gemcount FROM matches
 		JOIN match_scores ON matches.id = match_scores.match_id
@@ -173,49 +174,49 @@ export class AchievementEvent {
 		}
 
 		// Trigger based
-		if (!currentAchievements.includes(2006) && AchievementEvent.hasEventTrigger(userId, 9001)) {
+		if (!currentAchievements.has(2006) && AchievementEvent.hasEventTrigger(userId, 9001)) {
 			Achievement.grantAchievement(userId, 2006);
 		}
-		if (!currentAchievements.includes(2015) && AchievementEvent.hasEventTrigger(userId, 1750)) {
+		if (!currentAchievements.has(2015) && AchievementEvent.hasEventTrigger(userId, 1750)) {
 			Achievement.grantAchievement(userId, 2015);
 		}
-		if (!currentAchievements.includes(2020) && AchievementEvent.hasEventTrigger(userId, 9002)) {
+		if (!currentAchievements.has(2020) && AchievementEvent.hasEventTrigger(userId, 9002)) {
 			Achievement.grantAchievement(userId, 2020);
 		}
 
 		// Trigger Range based
-		if (!currentAchievements.includes(2007) && AchievementEvent.hasEventTriggerRange(userId, 8080, 8092)) {
+		if (!currentAchievements.has(2007) && AchievementEvent.hasEventTriggerRange(userId, 8080, 8092)) {
 			Achievement.grantAchievement(userId, 2007);
 		}
-		if (!currentAchievements.includes(2011) && AchievementEvent.hasEventTriggerRange(userId, 1500, 1515)) {
+		if (!currentAchievements.has(2011) && AchievementEvent.hasEventTriggerRange(userId, 1500, 1515)) {
 			Achievement.grantAchievement(userId, 2011);
 		}
-		if (!currentAchievements.includes(2012) && AchievementEvent.hasEventTriggerRange(userId, 1700, 1730)) {
+		if (!currentAchievements.has(2012) && AchievementEvent.hasEventTriggerRange(userId, 1700, 1730)) {
 			Achievement.grantAchievement(userId, 2012);
 		}
-		if (!currentAchievements.includes(2013) && AchievementEvent.hasEventTriggerRange(userId, 1650, 1660)) {
+		if (!currentAchievements.has(2013) && AchievementEvent.hasEventTriggerRange(userId, 1650, 1660)) {
 			Achievement.grantAchievement(userId, 2013);
 		}
-		if (!currentAchievements.includes(2014) && AchievementEvent.hasEventTriggerRange(userId, 1600, 1611)) {
+		if (!currentAchievements.has(2014) && AchievementEvent.hasEventTriggerRange(userId, 1600, 1611)) {
 			Achievement.grantAchievement(userId, 2014);
 		}
-		if (!currentAchievements.includes(2017) && AchievementEvent.hasEventTriggerRange(userId, 1800, 1802)) {
+		if (!currentAchievements.has(2017) && AchievementEvent.hasEventTriggerRange(userId, 1800, 1802)) {
 			Achievement.grantAchievement(userId, 2017);
 		}
 
 		// Achievement..based
-		if (!currentAchievements.includes(2010)) {
-			if (currentAchievements.every(x => [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009].includes(x))) {
+		if (!currentAchievements.has(2010)) {
+			if (playerAchievements.every(x => [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009].includes(x))) {
 				Achievement.grantAchievement(userId, 2010);
 			}
 		}
-		if (!currentAchievements.includes(2016)) {
-			if (currentAchievements.every(x => [2011, 2012, 2013, 2014, 2015].includes(x))) {
+		if (!currentAchievements.has(2016)) {
+			if (playerAchievements.every(x => [2011, 2012, 2013, 2014, 2015].includes(x))) {
 				Achievement.grantAchievement(userId, 2016);
 			}
 		}
-		if (!currentAchievements.includes(2021)) {
-			if (currentAchievements.every(x => [2010, 2016, 2017, 2018, 2019, 2020].includes(x))) {
+		if (!currentAchievements.has(2021)) {
+			if (playerAchievements.every(x => [2010, 2016, 2017, 2018, 2019, 2020].includes(x))) {
 				Achievement.grantAchievement(userId, 2021);
 			}
 		}
@@ -226,15 +227,16 @@ export class AchievementEvent {
 			return;
 		
 		let username = Player.getUsername(userId);
-		let currentAchievements = Player.getPlayerAchievements(username).achievements;
+		let playerAchievements = Player.getPlayerAchievements(username).achievements;
+		let currentAchievements = new Set(playerAchievements);
 
-		if (!currentAchievements.includes(3000)) {
+		if (!currentAchievements.has(3000)) {
 			Achievement.grantAchievement(userId, 3000);
 		}
 
 
 		// Collect 35 total easter eggs on halloween MP levels
-		if (!currentAchievements.includes(3004)) {
+		if (!currentAchievements.has(3004)) {
 			let q = Storage.query(`
 		SELECT COUNT(*) AS eggs FROM (
 			SELECT mission_id FROM user_eggs
@@ -251,7 +253,7 @@ export class AchievementEvent {
 			}
 		}
 
-		if (!currentAchievements.includes(3002)) {
+		if (!currentAchievements.has(3002)) {
 			// Win a match against 3 players on skate battle royale
 			let q = Storage.query(`
 		SELECT COUNT(*) AS wins FROM match_scores
@@ -269,7 +271,7 @@ export class AchievementEvent {
 			}
 		}
 
-		if (!currentAchievements.includes(3003)) {
+		if (!currentAchievements.has(3003)) {
 			// Win teams match on spires
 			let q = Storage.query(`
 		SELECT COUNT(*) AS wins FROM match_scores
@@ -288,7 +290,7 @@ export class AchievementEvent {
 			}
 		}
 
-		if (!currentAchievements.includes(3015)) {
+		if (!currentAchievements.has(3015)) {
 			// Win snowball only teams match on snow brawl
 			let q = Storage.query(`
 		SELECT COUNT(*) AS wins FROM match_scores
@@ -309,7 +311,7 @@ export class AchievementEvent {
 			}
 		}
 
-		if (!currentAchievements.includes(3020)) {
+		if (!currentAchievements.has(3020)) {
 			// Win snowball only match on wintry village
 			let q = Storage.query(`
 		SELECT COUNT(*) AS wins FROM match_scores
@@ -328,7 +330,7 @@ export class AchievementEvent {
 			}
 		}
 
-		if (!currentAchievements.includes(3005)) {
+		if (!currentAchievements.has(3005)) {
 			// 5 UTs, versus
 			let q2 = Storage.query(`
 		SELECT * FROM match_scores
@@ -347,7 +349,7 @@ export class AchievementEvent {
 			}
 		}
 
-		if (!currentAchievements.includes(3013)) {
+		if (!currentAchievements.has(3013)) {
 			// 20 PTs
 			let q2 = Storage.query(`
 		SELECT * FROM user_scores
@@ -363,7 +365,7 @@ export class AchievementEvent {
 			}
 		}
 
-		if (!currentAchievements.includes(3014)) {
+		if (!currentAchievements.has(3014)) {
 			// 20 UTs
 			let q2 = Storage.query(`
 		SELECT * FROM user_scores
@@ -379,7 +381,7 @@ export class AchievementEvent {
 			}
 		}
 
-		if (!currentAchievements.includes(3006)) {
+		if (!currentAchievements.has(3006)) {
 			// Win FFA by atleast 100 pts
 			let q = Storage.query(`
 		SELECT COUNT(*) AS wins FROM match_scores AS score
@@ -407,7 +409,7 @@ export class AchievementEvent {
 
 		// Snowball related
 		
-		if (!currentAchievements.includes(3007)) {
+		if (!currentAchievements.has(3007)) {
 			// Launch 3k snowballs
 			let q = Storage.query(`
 		SELECT SUM(snowballs) AS snowballs FROM user_event_snowballs
@@ -418,7 +420,7 @@ export class AchievementEvent {
 			}
 		}
 
-		if (!currentAchievements.includes(3008)) {
+		if (!currentAchievements.has(3008)) {
 			// Hit others 500 times with snowballs
 			let q = Storage.query(`
 		SELECT SUM(snowballs) AS snowballs FROM user_event_snowballs
@@ -431,7 +433,7 @@ export class AchievementEvent {
 
 		// Win 10, 25, 100 rounds of snowball matches
 
-		if (!currentAchievements.includes(3030) || !currentAchievements.includes(3031) || !currentAchievements.includes(3032)) {
+		if (!currentAchievements.has(3030) || !currentAchievements.has(3031) || !currentAchievements.has(3032)) {
 			let q2 = Storage.query(`
 		SELECT * AS wins FROM match_scores
 		  JOIN user_scores ON match_scores.score_id = user_scores.id
@@ -456,75 +458,75 @@ export class AchievementEvent {
 		}
 
 		// Trigger Based
-		if (!currentAchievements.includes(3025) && AchievementEvent.hasEventTrigger(userId, 1105)) {
+		if (!currentAchievements.has(3025) && AchievementEvent.hasEventTrigger(userId, 1105)) {
 			Achievement.grantAchievement(userId, 3025);
 		}
 
-		if (!currentAchievements.includes(3029) && AchievementEvent.hasEventTrigger(userId, 1112)) {
+		if (!currentAchievements.has(3029) && AchievementEvent.hasEventTrigger(userId, 1112)) {
 			Achievement.grantAchievement(userId, 3029);
 		}
 
-		if (!currentAchievements.includes(3009) && !currentAchievements.includes(3010) && !currentAchievements.includes(3011)) {
+		if (!currentAchievements.has(3009) && !currentAchievements.has(3010) && !currentAchievements.has(3011)) {
 			let t = AchievementEvent.eventTriggerRangeCount(userId, 8101, 8129)
 
-			if (!currentAchievements.includes(3009) && t >= 1) {
+			if (!currentAchievements.has(3009) && t >= 1) {
 				Achievement.grantAchievement(userId, 3009);
 			}
 
-			if (!currentAchievements.includes(3010) && t >= 7) {
+			if (!currentAchievements.has(3010) && t >= 7) {
 				Achievement.grantAchievement(userId, 3010);
 			}
 
-			if (!currentAchievements.includes(3011) && t >= 14) {
+			if (!currentAchievements.has(3011) && t >= 14) {
 				Achievement.grantAchievement(userId, 3011);
 			}
 		}
 
-		if (!currentAchievements.includes(3012) && AchievementEvent.hasEventTriggerRange(userId, 8101, 8129)) {
+		if (!currentAchievements.has(3012) && AchievementEvent.hasEventTriggerRange(userId, 8101, 8129)) {
 			Achievement.grantAchievement(userId, 3012);
 		}
 
-		if (!currentAchievements.includes(3016) && AchievementEvent.hasEventTriggerRange(userId, 1020, 1042)) {
+		if (!currentAchievements.has(3016) && AchievementEvent.hasEventTriggerRange(userId, 1020, 1042)) {
 			Achievement.grantAchievement(userId, 3016);
 		}
-		if (!currentAchievements.includes(3017) && AchievementEvent.hasEventTriggerRange(userId, 1000, 1019)) {
+		if (!currentAchievements.has(3017) && AchievementEvent.hasEventTriggerRange(userId, 1000, 1019)) {
 			Achievement.grantAchievement(userId, 3017);
 		}
-		if (!currentAchievements.includes(3018) && AchievementEvent.hasEventTriggerRange(userId, 1043, 1074)) {
+		if (!currentAchievements.has(3018) && AchievementEvent.hasEventTriggerRange(userId, 1043, 1074)) {
 			Achievement.grantAchievement(userId, 3018);
 		}
-		if (!currentAchievements.includes(3019) && AchievementEvent.hasEventTriggerRange(userId, 1075, 1084)) {
+		if (!currentAchievements.has(3019) && AchievementEvent.hasEventTriggerRange(userId, 1075, 1084)) {
 			Achievement.grantAchievement(userId, 3019);
 		}
-		if (!currentAchievements.includes(3024) && AchievementEvent.hasEventTriggerRange(userId, 1102, 1104)) {
+		if (!currentAchievements.has(3024) && AchievementEvent.hasEventTriggerRange(userId, 1102, 1104)) {
 			Achievement.grantAchievement(userId, 3024);
 		}
-		if (!currentAchievements.includes(3026) && AchievementEvent.hasEventTriggerRange(userId, 1106, 1111)) {
+		if (!currentAchievements.has(3026) && AchievementEvent.hasEventTriggerRange(userId, 1106, 1111)) {
 			Achievement.grantAchievement(userId, 3026);
 		}
-		if (!currentAchievements.includes(3027) && AchievementEvent.hasEventTriggerRange(userId, 1113, 1118)) {
+		if (!currentAchievements.has(3027) && AchievementEvent.hasEventTriggerRange(userId, 1113, 1118)) {
 			Achievement.grantAchievement(userId, 3027);
 		}
-		if (!currentAchievements.includes(3028) && AchievementEvent.hasEventTriggerRange(userId, 1119, 1148)) {
+		if (!currentAchievements.has(3028) && AchievementEvent.hasEventTriggerRange(userId, 1119, 1148)) {
 			Achievement.grantAchievement(userId, 3028);
 		}
 
 		// Achievement related
 
-		if (!currentAchievements.includes(3021)) {
-			if (currentAchievements.every(x => [3001, 3004, 3011, 3016, 3017, 3018, 3019].includes(x))) {
+		if (!currentAchievements.has(3021)) {
+			if (playerAchievements.every(x => [3001, 3004, 3011, 3016, 3017, 3018, 3019].includes(x))) {
 				Achievement.grantAchievement(userId, 3021);
 			}
 		}
 
-		if (!currentAchievements.includes(3022)) {
-			if (currentAchievements.every(x => [3002, 3003, 3005, 3006, 3007, 3008, 3013, 3014, 3015].includes(x))) {
+		if (!currentAchievements.has(3022)) {
+			if (playerAchievements.every(x => [3002, 3003, 3005, 3006, 3007, 3008, 3013, 3014, 3015].includes(x))) {
 				Achievement.grantAchievement(userId, 3022);
 			}
 		}
 
-		if (!currentAchievements.includes(3023)) {
-			if (currentAchievements.every(x => [3021, 3022].includes(x))) {
+		if (!currentAchievements.has(3023)) {
+			if (playerAchievements.every(x => [3021, 3022].includes(x))) {
 				Achievement.grantAchievement(userId, 3023);
 			}
 		}
