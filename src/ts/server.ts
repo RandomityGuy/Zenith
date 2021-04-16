@@ -734,6 +734,14 @@ export class PQServer {
 		let scoreGems5 = req.searchParams.getAll("scores[gems5][]");
 		let scoreGems10 = req.searchParams.getAll("scores[gems10][]");
 		let scoreTeams = req.searchParams.getAll("scores[team][]");
+		let scoreSnowballs: string[] = [];
+		if (req.searchParams.has("scores[snowballs][]")) {
+			scoreSnowballs = req.searchParams.getAll("scores[snowballs][]");
+		}
+		let scoreSnowballHits: string[] = [];
+		if (req.searchParams.has("scores[snowballhits][]")) {
+			scoreSnowballHits = req.searchParams.getAll("scores[snowballhits][]");
+		}
 
 		let scoreDatas: MatchScore[] = [];
 
@@ -753,12 +761,18 @@ export class PQServer {
 				gems5: Number.parseInt(scoreGems5[i]),
 				gems10: Number.parseInt(scoreGems10[i]),
 				team: Number.parseInt(scoreTeams[i]),
+				snowballs: scoreSnowballs === [] ? null : Number.parseInt(scoreSnowballs[i]),
+				snowballHits: scoreSnowballHits === [] ? null : Number.parseInt(scoreSnowballHits[i])
 			}
 
 			scoreDatas.push(scoreData);
 		}
 
-		let obj = Multiplayer.recordMatch(userId, missionId, req.request.socket.remoteAddress, Number.parseInt(req.searchParams.get("port")), req.searchParams.get("scoreType"), Number.parseInt(req.searchParams.get("totalBonus")), req.searchParams.get("modes"), teams, scoreDatas);
+		let extraModes = "";
+		if (req.searchParams.has('extraModes'))
+			extraModes = req.searchParams.get('extraModes');
+
+		let obj = Multiplayer.recordMatch(userId, missionId, req.request.socket.remoteAddress, Number.parseInt(req.searchParams.get("port")), req.searchParams.get("scoreType"), Number.parseInt(req.searchParams.get("totalBonus")), req.searchParams.get("modes"), extraModes, teams, scoreDatas);
 		return obj;
 	}
 

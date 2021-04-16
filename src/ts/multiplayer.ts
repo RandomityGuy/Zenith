@@ -17,7 +17,10 @@ export interface MatchScore {
 	gems2: number,
 	gems5: number,
 	gems10: number,
-	team: number
+	team: number,
+
+	snowballs: number | null,
+	snowballHits: number | null,
 }
 
 export interface MatchTeam {
@@ -28,7 +31,7 @@ export interface MatchTeam {
 export class Multiplayer {
 
 	// Store details of a multiplayer match
-	static recordMatch(userId: number, missionId: number, address: string, port: number, scoreType: string, totalBonus: number, modes: string, teams: MatchTeam[], scores: MatchScore[]) {
+	static recordMatch(userId: number, missionId: number, address: string, port: number, scoreType: string, totalBonus: number, modes: string, extraModes: string, teams: MatchTeam[], scores: MatchScore[]) {
 		// Input the initial match data
 		Storage.query(`INSERT INTO matches(mission_id,player_count,team_count,rating_multiplier,server_address,server_port,dedicated) VALUES (@missionId, @playerCount, @teamCount, '1.0', @address, @port, '0');`).run({ missionId: missionId, playerCount: scores.length, teamCount: teams.length, address: address, port: port });
 
@@ -140,8 +143,8 @@ export class Multiplayer {
 
 				rating = Math.floor(rating);
 
-				let insertQuery = Storage.query(`INSERT INTO user_scores(user_id,mission_id,score,score_type,total_bonus,rating,gem_count,gems_1_point,gems_2_point,gems_5_point,gems_10_point,modifiers,origin,extra_modes,sort,disabled,timestamp) VALUES (@userId, @missionId, @score, @scoreType, @totalBonus, @rating, @gemCount, @gems1, @gems2, @gems5, @gems10, @modifiers, 'PlatinumQuest', '', @sort, '0', DATETIME('now','localtime'));`);
-				let c = insertQuery.run({ userId: playerId, missionId: missionId, score: score.score, scoreType: scoreType, totalBonus: totalBonus, rating: rating, gemCount: score.gemCount, gems1: score.gems1, gems2: score.gems2, gems5: score.gems5, gems10: score.gems10, modifiers: modifiers, sort: sort });
+				let insertQuery = Storage.query(`INSERT INTO user_scores(user_id,mission_id,score,score_type,total_bonus,rating,gem_count,gems_1_point,gems_2_point,gems_5_point,gems_10_point,modifiers,origin,extra_modes,sort,disabled,timestamp) VALUES (@userId, @missionId, @score, @scoreType, @totalBonus, @rating, @gemCount, @gems1, @gems2, @gems5, @gems10, @modifiers, 'PlatinumQuest', @extraModes, @sort, '0', DATETIME('now','localtime'));`);
+				let c = insertQuery.run({ userId: playerId, missionId: missionId, score: score.score, scoreType: scoreType, totalBonus: totalBonus, rating: rating, gemCount: score.gemCount, gems1: score.gems1, gems2: score.gems2, gems5: score.gems5, gems10: score.gems10, modifiers: modifiers, sort: sort, extraModes: extraModes });
 
 				let scoreId = Storage.query("SELECT MAX(id) AS scoreId FROM user_scores;").get(); // ehh
 				scoreId = scoreId.scoreId;
@@ -154,6 +157,11 @@ export class Multiplayer {
 				totRating = ratingData.rating_mp;
 				totRating += rating;
 				Storage.query("UPDATE user_ratings SET rating_mp = @rating WHERE user_id = @userId").run({ userId: playerId, rating: totRating });
+
+				// Snowballs
+				if (score.snowballs !== null) {
+					Storage.query(`INSERT INTO user_event_snowballs VALUES(@scoreId, @snowballs, @hits)`).run({ scoreId: scoreId, snowballs: score.snowballs, hits: score.snowballHits });
+				}
 			}
 			
 			retObj.push({ username: score.username, rating: totRating, change: rating, place: score.place });

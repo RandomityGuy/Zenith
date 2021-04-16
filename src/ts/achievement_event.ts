@@ -423,7 +423,7 @@ export class AchievementEvent {
 		if (!currentAchievements.has(3008)) {
 			// Hit others 500 times with snowballs
 			let q = Storage.query(`
-		SELECT SUM(snowballs) AS snowballs FROM user_event_snowballs
+		SELECT SUM(hits) AS snowballs FROM user_event_snowballs
 		JOIN user_scores ON user_event_snowballs.score_id = user_scores.id
 		WHERE user_id = @userId`).get({ userId: userId });
 			if (q.snowballs >= 500) {
