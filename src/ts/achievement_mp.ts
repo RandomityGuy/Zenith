@@ -233,12 +233,12 @@ export class AchievementMP {
 		) AND rating_column = 'rating_mp'
 		AND is_custom = 0`).get({ userId: userId });
 			if (allhunt === undefined) {
-				allhunt = 0;
+				allhunt = 1;
 			} else {
 				allhunt = allhunt.allhunt;
 			}
 
-			if (allhunt > 0) {
+			if (allhunt === 0) {
 				Achievement.grantAchievement(userId, 51);
 			}
 		}
