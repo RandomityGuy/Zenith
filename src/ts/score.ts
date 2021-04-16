@@ -1,4 +1,4 @@
-import { Achievement } from "./achievement";
+import { AchievementSP } from "./achievement_sp";
 import { Storage } from "./storage";
 
 interface RatingInfo {
@@ -261,7 +261,7 @@ export class Score {
 		};
 		
 		// Do the achievement shit
-		Achievement.updateSinglePlayerAchievements(userId);
+		AchievementSP.updateSinglePlayerAchievements(userId);
 		
 		return obj;
 	}

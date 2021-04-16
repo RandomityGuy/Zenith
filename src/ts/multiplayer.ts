@@ -1,4 +1,4 @@
-import { Achievement } from "./achievement";
+import { AchievementMP } from "./achievement_mp";
 import { Player } from "./player";
 import { Score } from "./score";
 import { Storage } from "./storage";
@@ -160,7 +160,7 @@ export class Multiplayer {
 				
 		})
 
-		Achievement.UpdateMultiplayerAchievements(userId); // This is ew
+		AchievementMP.UpdateMultiplayerAchievements(userId); // This is ew
 
 		return retObj;
 	}
