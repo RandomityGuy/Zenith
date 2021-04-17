@@ -70,12 +70,9 @@ export class Achievement {
 	}
 
 	// Check for title and flair unlocks
-	static checkTitleFlairUnlocks(userId: number) {
-
-		let topScores = Score.getPersonalTopScoreList(userId);
-		let username = Player.getUsername(userId);
-		let playerAchievements = Player.getPlayerAchievements(username).achievements;
+	static checkTitleFlairUnlocks(userId: number, playerAchievements: any[], topScores: any) {
 		let currentAchievements = new Set(playerAchievements);
+		let currentTitleFlairs = new Set(Player.getTitleFlairs(userId, "any"));
 
 		function bestModifiers(missionId: number, modifiers: number) {
 			let score = Storage.query("SELECT * FROM user_scores WHERE user_id = @userId AND mission_id = @missionId AND user_scores.disabled = 0 AND (modifiers & @modifiers = @modifiers) ORDER BY sort;").get({ userId: userId, missionId: missionId, modifiers: modifiers });
@@ -99,44 +96,49 @@ export class Achievement {
 		}
 
 		// Double diamond
-		if (bestModifiers(17, Score.modifierFlags.doubleDiamond | Score.modifierFlags.noTimeTravels) < 70000) {
+		if (!currentTitleFlairs.has(109) && bestModifiers(17, Score.modifierFlags.doubleDiamond | Score.modifierFlags.noTimeTravels) < 70000) {
 			Achievement.grantTitleFlair(userId, 109);
 		}
 
 		// Spacestation
-		levelBased(106, 360000, 62);
+		if (!currentTitleFlairs.has(62))
+			levelBased(106, 360000, 62);
 		
 		// Great Divide
+		if (!currentTitleFlairs.has(105))
 		levelBased(202, 18500, 105);
 
 		// All the PQ achievement based
-		if (currentAchievements.has(125))
+		if (!currentTitleFlairs.has(213) && currentAchievements.has(125))
 			Achievement.grantTitleFlair(userId, 213);
-		if (currentAchievements.has(127))
+		if (!currentTitleFlairs.has(214) && currentAchievements.has(127))
 			Achievement.grantTitleFlair(userId, 214);
-		if (currentAchievements.has(128))
+		if (!currentTitleFlairs.has(215) && currentAchievements.has(128))
 			Achievement.grantTitleFlair(userId, 215);
-		if (currentAchievements.has(130))
+		if (!currentTitleFlairs.has(216) && currentAchievements.has(130))
 			Achievement.grantTitleFlair(userId, 216);
-		if (currentAchievements.has(136) && currentAchievements.has(137))
+		if (!currentTitleFlairs.has(218) && currentAchievements.has(136) && currentAchievements.has(137))
 			Achievement.grantTitleFlair(userId, 218);
-		if (currentAchievements.has(133))
+		if (!currentTitleFlairs.has(231) && currentAchievements.has(133))
 			Achievement.grantTitleFlair(userId, 231);
-		if (currentAchievements.has(140))
+		if (!currentTitleFlairs.has(225) && currentAchievements.has(140))
 			Achievement.grantTitleFlair(userId, 225);
-		if (currentAchievements.has(146))
+		if (!currentTitleFlairs.has(226) && currentAchievements.has(146))
 			Achievement.grantTitleFlair(userId, 226);
-		if (currentAchievements.has(142) && currentAchievements.has(150))
+		if (!currentTitleFlairs.has(227) && currentAchievements.has(142) && currentAchievements.has(150))
 			Achievement.grantTitleFlair(userId, 227);
-		if (currentAchievements.has(138))
+		if (!currentTitleFlairs.has(228) && currentAchievements.has(138))
 			Achievement.grantTitleFlair(userId, 228);
-		if (currentAchievements.has(130))
+		if (!currentTitleFlairs.has(212) && currentAchievements.has(130))
 			Achievement.grantTitleFlair(userId, 212);
 
 		if (playerAchievements.every(x => [125, 126, 127, 128, 131, 132, 133, 134, 135, 136, 137, 138, 140, 141, 142, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155].includes(x))) {
-			Achievement.grantTitleFlair(userId, 229);
+			
+			if (!currentTitleFlairs.has(229))
+				Achievement.grantTitleFlair(userId, 229);
 
-			let q = Storage.query(`
+			if (!currentTitleFlairs.has(230)) {
+				let q = Storage.query(`
 				SELECT COUNT(*) AS eggcount FROM (
 				SELECT user_eggs.mission_id FROM user_eggs
 				JOIN missions ON user_eggs.mission_id = missions.id
@@ -149,8 +151,8 @@ export class Achievement {
 				GROUP BY user_eggs.mission_id
 			) AS egg_missions`).get({ userId: userId });
 			
-			if (q.eggcount === 53) {
-				q = Storage.query(`
+				if (q.eggcount === 53) {
+					q = Storage.query(`
 					SELECT
 					-- Count of all challenge scores/times except PHP knows what the bit flags are
 				    SUM(CASE WHEN modifiers & @modifiers != 0 THEN 1 ELSE 0 END) AS ultimate_count
@@ -182,14 +184,20 @@ export class Achievement {
 				JOIN missions ON uniques.mission_id = missions.id
 		        JOIN mission_rating_info ON missions.id = mission_rating_info.mission_id`).get({ modifiers: 4352, userId: userId }); // Modifiers are UltimateTime | UltimateScore.
 
-				if (q.ultimate_count === 138) {
-					Achievement.grantTitleFlair(userId, 230);
+					if (q.ultimate_count === 138) {
+						Achievement.grantTitleFlair(userId, 230);
+					}
 				}
 			}
 		}
 
 		// Colored name
-		let q = Storage.query(`
+		
+		// Check if they already have color
+		let colortest = Storage.query('SELECT hasColor FROM users WHERE id=@userId').get({ userId: userId }).hasColor;
+
+		if (colortest === 0) {
+			let q = Storage.query(`
 		SELECT COUNT(*) AS cnt FROM missions
 		  JOIN mission_games ON missions.game_id = mission_games.id
 		WHERE
@@ -215,8 +223,9 @@ export class Achievement {
 		          ))
 		  )`).get({ userId: userId });
 		
-		if (q.cnt === 0) {
-			Storage.query('UPDATE users SET hasColor=1 WHERE userId=@userId').run({ userId: userId });
+			if (q.cnt === 0) {
+				Storage.query('UPDATE users SET hasColor=1 WHERE id=@userId').run({ userId: userId });
+			}
 		}
 
 	}

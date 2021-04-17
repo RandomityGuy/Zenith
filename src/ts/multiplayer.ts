@@ -1,3 +1,4 @@
+import { Achievement } from "./achievement";
 import { AchievementEvent } from "./achievement_event";
 import { AchievementMP } from "./achievement_mp";
 import { Mission } from "./mission";
@@ -173,9 +174,11 @@ export class Multiplayer {
 
 		scores.forEach(x => {
 			let playerId = Player.getUserId(x.username);
-			AchievementMP.UpdateMultiplayerAchievements(playerId); // This is ew
-			AchievementEvent.updateHalloweenAchievements(playerId);
-			AchievementEvent.updateWinterAchievements(playerId);
+			let topScores = Score.getPersonalTopScoreList(userId);
+			let achievementList = Player.getPlayerAchievements(x.username);
+			AchievementMP.UpdateMultiplayerAchievements(playerId, achievementList.achievements, topScores); // This is ew
+			AchievementEvent.updateEventAchievements(playerId, achievementList.achievements, topScores);
+			Achievement.checkTitleFlairUnlocks(userId, achievementList.achievements, topScores);
 		})
 
 		return retObj;

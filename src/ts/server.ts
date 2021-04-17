@@ -820,8 +820,11 @@ export class PQServer {
 		Storage.query("INSERT INTO user_event_triggers VALUES(@userId,@trigger,DATETIME('now','localtime'));").run({ userId: userId, trigger: trigger });
 		
 		// Do this gay shit
-		AchievementEvent.updateHalloweenAchievements(userId);
-		AchievementEvent.updateWinterAchievements(userId);
+		let userName = Player.getUsername(userId);
+		let topScores = Score.getPersonalTopScoreList(userId);
+		let achievementList = Player.getPlayerAchievements(userName);
+		AchievementEvent.updateEventAchievements(userId, achievementList.achievements, topScores);
+		Achievement.checkTitleFlairUnlocks(userId, achievementList.achievements, topScores);
 		
 		let obj = triggerCount;
 		return obj;

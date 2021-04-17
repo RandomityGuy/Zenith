@@ -28,12 +28,15 @@ export class AchievementEvent {
 		return q.triggerCount;
 	}
 
-	static async updateHalloweenAchievements(userId: number) {
+	static async updateEventAchievements(userId: number, playerAchievements: any[], topScores: any[]) {
+		this.updateWinterAchievements(userId, playerAchievements, topScores);
+		this.updateHalloweenAchievements(userId, playerAchievements, topScores);
+	}
+
+	static async updateHalloweenAchievements(userId: number, playerAchievements: any[], topScores: any) {
 		if (!Storage.settings.halloween_event)
 			return;
 		
-		let username = Player.getUsername(userId);
-		let playerAchievements = Player.getPlayerAchievements(username).achievements;
 		let currentAchievements = new Set(playerAchievements);
 		
 		if (!currentAchievements.has(2000)) {
@@ -222,12 +225,10 @@ export class AchievementEvent {
 		}
 	}
 
-	static async updateWinterAchievements(userId: number) {
+	static async updateWinterAchievements(userId: number, playerAchievements: any[], topScores: any) {
 		if (!Storage.settings.winter_event)
 			return;
 		
-		let username = Player.getUsername(userId);
-		let playerAchievements = Player.getPlayerAchievements(username).achievements;
 		let currentAchievements = new Set(playerAchievements);
 
 		if (!currentAchievements.has(3000)) {

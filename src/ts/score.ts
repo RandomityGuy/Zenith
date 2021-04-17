@@ -1,4 +1,8 @@
+import { Achievement } from "./achievement";
+import { AchievementEvent } from "./achievement_event";
+import { AchievementMP } from "./achievement_mp";
 import { AchievementSP } from "./achievement_sp";
+import { Player } from "./player";
 import { Storage } from "./storage";
 
 interface RatingInfo {
@@ -56,24 +60,16 @@ export class Score {
 		let lapTimes = Storage.query("SELECT mission_id, time as 'score', 'time' as score_type FROM user_lap_times WHERE user_id = @userId GROUP BY mission_id HAVING MIN(time);").all({ userId: userId })
 		let quota100 = Storage.query("SELECT mission_id, score, score_type FROM user_scores WHERE user_id = @userId AND (modifiers & (1 << 4) = (1 << 4)) GROUP BY mission_id HAVING (CASE WHEN score_type='time' THEN MIN(score) ELSE MAX(score) END)").all({ userId: userId });
 		let wrList = Storage.query(`
-		SELECT T.mission_id
-		FROM (
-			SELECT S.mission_id, S.user_id, S.score, missions.name, missions.sort_index, timestamp
-			FROM (
-				SELECT mission_id, user_id, score, 1 AS priority, timestamp
-				FROM user_scores 
-				WHERE score_type = 'time' AND disabled = 0 
-				GROUP BY mission_id HAVING MIN(score)
-				UNION
-				SELECT mission_id, user_id, score, 0 AS priority, timestamp
-				FROM user_scores 
-				WHERE score_type = 'score' AND disabled = 0 
-				GROUP BY mission_id HAVING MAX(score)
-			) AS S, missions, mission_games
-			WHERE missions.is_custom = 0 AND missions.id = S.mission_id AND missions.id = S.mission_id AND mission_games.id = missions.game_id AND mission_games.game_type = 'Single Player'
-			GROUP BY mission_id HAVING MAX(priority) ANd MAX(timestamp)
-		) AS T
-		WHERE T.user_id = @userId;`).all({ userId: userId }).map(x => x.mission_id);
+		SELECT S.mission_id FROM (
+			SELECT missions.id AS mission_id, user_scores.score, user_scores.user_id 
+			FROM user_scores, mission_games, missions
+			WHERE missions.is_custom = 0 
+				AND missions.id = user_scores.mission_id 
+				AND mission_games.id = missions.game_id 
+				AND mission_games.game_type = 'Single Player'
+			GROUP BY mission_id HAVING MIN(sort)
+			) AS S
+		WHERE user_id = @userId`).all({ userId: userId }).map(x => x.mission_id);
 		let dict = new Map<any, any>();
 		topScoresData.forEach(x => {
 			dict.set(Number.parseInt(x.mission_id), {
@@ -261,7 +257,13 @@ export class Score {
 		};
 		
 		// Do the achievement shit
-		AchievementSP.updateSinglePlayerAchievements(userId);
+		let userName = Player.getUsername(userId);
+		let topScores = Score.getPersonalTopScoreList(userId);
+		let achievementList = Player.getPlayerAchievements(userName);
+		AchievementMP.UpdateMultiplayerAchievements(userId, achievementList.achievements, topScores); // This is ew
+		AchievementEvent.updateEventAchievements(userId, achievementList.achievements, topScores);
+		Achievement.checkTitleFlairUnlocks(userId, achievementList.achievements, topScores);
+		AchievementSP.updateSinglePlayerAchievements(userId, achievementList.achievements, topScores);
 		
 		return obj;
 	}

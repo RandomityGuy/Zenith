@@ -5,10 +5,9 @@ import { Storage } from "./storage";
 
 export class AchievementMP {
 	// Check MP Achievements, these shits are extremly query heavy
-	static async UpdateMultiplayerAchievements(userId: number) {
+	static async UpdateMultiplayerAchievements(userId: number, playerAchievements: any[], topScores: any) {
+		let currentAchievements = new Set(playerAchievements);
 		// Most of these queries are just copied from the original php
-		let username = Player.getUsername(userId);
-		let currentAchievements = new Set(Player.getPlayerAchievements(username).achievements);
 
 		if (!currentAchievements.has(46) || !currentAchievements.has(57)) {
 			// MP win a non teams match, win 500 matches

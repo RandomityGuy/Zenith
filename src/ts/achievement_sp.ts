@@ -5,10 +5,8 @@ import { Storage } from "./storage";
 
 export class AchievementSP {
     // Checks SP achievements
-	static async updateSinglePlayerAchievements(userId: number) {
-		let username = Player.getUsername(userId);
-		let currentAchievements = new Set(Player.getPlayerAchievements(username).achievements);
-		let topScores = Score.getPersonalTopScoreList(userId);
+	static async updateSinglePlayerAchievements(userId: number, playerAchievements: any[], topScores: any) {
+		let currentAchievements = new Set(playerAchievements);
 
 		let eggCountQuery = Storage.query(`
 		SELECT COUNT(*) AS eggCount
