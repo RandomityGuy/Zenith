@@ -4,45 +4,45 @@ import { Score } from "./score";
 import { Storage } from "./storage";
 
 export class Egg {
-	
-	// Gets the list of all easter eggs by a player
-	static getEasterEggs(userId: number) {
-		let eggData = Storage.query(`SELECT * FROM user_eggs WHERE user_id = @userId GROUP BY mission_id HAVING MIN("time");`).all({ userId: userId });
+    
+    // Gets the list of all easter eggs by a player
+    static getEasterEggs(userId: number) {
+        let eggData = Storage.query(`SELECT * FROM user_eggs WHERE user_id = @userId GROUP BY mission_id HAVING MIN("time");`).all({ userId: userId });
 
-		let eggDict = new Map<number, number>();
-		eggData.forEach(x => {
-			eggDict.set(x.mission_id, x.time);
-		})
+        let eggDict = new Map<number, number>();
+        eggData.forEach(x => {
+            eggDict.set(x.mission_id, x.time);
+        })
 
-		let jobj = Object.fromEntries(eggDict);
-		return jobj;
-	}
+        let jobj = Object.fromEntries(eggDict);
+        return jobj;
+    }
 
-	// Insert the egg record into the database
-	static recordEgg(userId: number, missionId: number, time: number) {
-		// First lets get the lowest score
-		let minTime = Storage.query('SELECT MIN("time") AS minTime FROM user_eggs WHERE mission_id = @missionId;').get({ missionId: missionId });
-		if (minTime === undefined) {
-			minTime = Infinity
-		} else {
-			minTime = minTime.minTime;
-		}
+    // Insert the egg record into the database
+    static recordEgg(userId: number, missionId: number, time: number) {
+        // First lets get the lowest score
+        let minTime = Storage.query('SELECT MIN("time") AS minTime FROM user_eggs WHERE mission_id = @missionId;').get({ missionId: missionId });
+        if (minTime === undefined) {
+            minTime = Infinity
+        } else {
+            minTime = minTime.minTime;
+        }
 
-		// Do the achievement check
-		let userName = Player.getUsername(userId);
-		let topScores = Score.getPersonalTopScoreList(userId);
-		let achievementList = Player.getPlayerAchievements(userName);
-		AchievementSP.updateSinglePlayerAchievements(userId, achievementList.achievements, topScores);
+        // Do the achievement check
+        let userName = Player.getUsername(userId);
+        let topScores = Score.getPersonalTopScoreList(userId);
+        let achievementList = Player.getPlayerAchievements(userName);
+        AchievementSP.updateSinglePlayerAchievements(userId, achievementList.achievements, topScores);
 
-		// Insert our score
-		let res = Storage.query(`INSERT INTO user_eggs(user_id,mission_id,time,timestamp) VALUES(@userId,@missionId,@time,DATETIME('now','localtime'));`).run({ userId: userId, missionId: missionId, time: time });
-		if (res.changes === 0) {
-			return "FAILURE";
-		} else {
-			if (minTime > time)
-				return "RECORDING";
-			else
-				return "SUCCESS";
-		}
-	}
+        // Insert our score
+        let res = Storage.query(`INSERT INTO user_eggs(user_id,mission_id,time,timestamp) VALUES(@userId,@missionId,@time,DATETIME('now','localtime'));`).run({ userId: userId, missionId: missionId, time: time });
+        if (res.changes === 0) {
+            return "FAILURE";
+        } else {
+            if (minTime > time)
+                return "RECORDING";
+            else
+                return "SUCCESS";
+        }
+    }
 }
