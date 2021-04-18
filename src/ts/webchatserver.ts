@@ -352,6 +352,51 @@ export class WebchatServer {
 			sender.send(response);
 			return true;
 		}
+		if (command === "/prefix" || command === "/suffix" || command === "/flair") {
+			if (context[0] === "list") {
+				let response = new WebchatResponse();
+
+				let titleflairtext = "List Of Available Prefixes:";
+				if (command === "/suffix") {
+					titleflairtext = "List Of Available Suffixes:"
+				}
+				if (command === "/flair") {
+					titleflairtext = "List Of Available Flairs:"
+				}
+
+				let type = command.slice(1);
+
+				response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} ${titleflairtext}`);
+
+				let titleflairlist = Player.getTitleFlairs(sender.userId, type as "prefix" | "suffix" | "flair");
+				titleflairlist.forEach(titleflairthing => {
+					response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} ${titleflairthing}`);
+				})
+
+				sender.send(response);
+				return true;
+			}
+			if (context[0] === "set") {
+				let response = new WebchatResponse();
+
+				let type = command.slice(1);
+
+				let titleFlairText = context.slice(1).join(' ');
+
+				let titleflairlist = Player.getTitleFlairs(sender.userId, type as "prefix" | "suffix" | "flair");
+
+				if (sender.accessLevel !== 2 && sender.accessLevel !== 4) {
+					if (!titleflairlist.includes(titleFlairText)) {
+						response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} ${WebchatResponse.encodeName(`Sorry but that ${type} is not available`)}`);
+						sender.send(response);
+						return true;
+					}
+				}
+
+				Player.setTitleFlair(sender.userId, type as "prefix" | "suffix" | "flair", titleFlairText);
+			}
+			return true;
+		}
 		return false;
 	}
 

@@ -40,6 +40,11 @@ export class Player {
 		return data.map(x => x.value);
 	}
 
+	static setTitleFlair(userId: number, type: "flair" | "prefix" | "suffix", value: string) {
+		let d = Storage.query(`UPDATE users SET title${type}=@value WHERE id=@userId`).run({ userId: userId, value: value });
+		return d.changes > 0;
+	}
+
 	// Register a user
 	static registerUser(email: string, username: string, password: string) {
 

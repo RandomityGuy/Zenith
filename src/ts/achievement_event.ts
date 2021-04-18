@@ -90,7 +90,7 @@ export class AchievementEvent {
 			SELECT COUNT(*) AS matchcount FROM missions
 			JOIN mission_games ON missions.game_id = mission_games.id
 			WHERE missions.id NOT IN (
-			SELECT missions.i'
+			SELECT missions.id
 			FROM matches
 				JOIN match_scores ON matches.id = match_scores.match_id
 				JOIN missions ON matches.mission_id = missions.id
@@ -436,7 +436,7 @@ export class AchievementEvent {
 
 		if (!currentAchievements.has(3030) || !currentAchievements.has(3031) || !currentAchievements.has(3032)) {
 			let q2 = Storage.query(`
-		SELECT * AS wins FROM match_scores
+		SELECT * FROM match_scores
 		  JOIN user_scores ON match_scores.score_id = user_scores.id
 		  JOIN missions ON user_scores.mission_id = missions.id
 		  JOIN matches ON match_scores.match_id = matches.id
