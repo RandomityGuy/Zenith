@@ -387,15 +387,40 @@ export class WebchatServer {
 
                 if (sender.accessLevel !== 2 && sender.accessLevel !== 4) {
                     if (!titleflairlist.includes(titleFlairText)) {
-                        response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} ${WebchatResponse.encodeName(`Sorry but that ${type} is not available`)}`);
+                        response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} ${`Sorry but that ${type} is not available`}`);
                         sender.send(response);
                         return true;
                     }
                 }
 
-                Player.setTitleFlair(sender.userId, type as "prefix" | "suffix" | "flair", titleFlairText);
+                if (Player.setTitleFlair(sender.userId, type as "prefix" | "suffix" | "flair", titleFlairText)) {
+                    response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} ${`Successfully set your ${type}!`}`);
+                    sender.send(response);
+
+                    this.notifyUserUpdate();
+                } else {
+                    response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} ${`Failed to set your ${type}!`}`);
+                    sender.send(response);
+                };
             }
             return true;
+        }
+
+        if (command === "/color") {
+            if (context.length > 0) {
+                if (Player.setColor(sender.userId, context[0])) {
+                    let response = new WebchatResponse();
+                    response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} Successfully set your color!`);
+                    sender.send(response);
+                    this.notifyUserUpdate();
+                    return true;
+                } else {
+                    let response = new WebchatResponse();
+                    response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} Failed set your color! Please check your permissions or check if you have beaten all gold and platinum times on all official games excluding bonus.`);
+                    sender.send(response);
+                    return true;
+                }
+            }
         }
         return false;
     }

@@ -40,9 +40,16 @@ export class Player {
         return data.map(x => x.value);
     }
 
+    // Sets the title/flair of a user
     static setTitleFlair(userId: number, type: "flair" | "prefix" | "suffix", value: string) {
         let d = Storage.query(`UPDATE users SET title${type}=@value WHERE id=@userId`).run({ userId: userId, value: value });
         return d.changes > 0;
+    }
+
+    // Sets the color for a user, if the user doesnt have hasColor/sufficient access level, it wont happen
+    static setColor(userId: number, color: string) {
+        let q = Storage.query("UPDATE users SET colorValue=@color WHERE id=@userId AND (hasColor=1 OR accessLevel = 2 OR accessLevel = 4)").run({ userId: userId, color: color });
+        return q.changes > 0;
     }
 
     // Register a user
