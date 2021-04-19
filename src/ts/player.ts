@@ -313,10 +313,10 @@ export class Player {
 
         // Flair data
         let flair: string;
-        let flairId = initialData.titleFlair !== null ? Number.parseInt(initialData.titleFlair) : 0;
-        if (Storage.settings.chat_flairs.length > flairId) {
-            flair = Storage.settings.chat_flairs[flairId];
-        }
+        let flairId = initialData.titleFlair; // !== null ? Number.parseInt(initialData.titleFlair) : 0;
+        // if (Storage.settings.chat_flairs.length > flairId) {
+        //     flair = Storage.settings.chat_flairs[flairId];
+        // }
 
         // Now combine it all up and serve it
         let obj = {
@@ -338,7 +338,7 @@ export class Player {
             registerDate: initialData.registerDate,
             status: initialData.status,
             titles: {
-                flair: flair,
+                flair: flairId,
                 prefix: initialData.titlePrefix === null ? "" : initialData.titlePrefix,
                 suffix: initialData.titleSuffix === null ? "" : initialData.titleSuffix
             },

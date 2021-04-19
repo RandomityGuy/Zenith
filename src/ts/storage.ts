@@ -24,6 +24,7 @@ export class Storage {
 
         PQServer: string,
         webchatServer: string,
+        mpMasterServer: string,
 
         gameVersion: number
     }

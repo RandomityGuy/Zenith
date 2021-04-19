@@ -15,6 +15,7 @@
 
 	"PQServer": "localhost:1337",
 	"webchatServer": "localhost:420",
+	"mpMasterServer": "localhost:666",
 
 	"gameVersion": 9000,
 

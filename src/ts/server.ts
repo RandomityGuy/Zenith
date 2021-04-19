@@ -16,6 +16,7 @@ import { Achievement } from './achievement';
 import { Replay } from './replay';
 import { MatchScore, MatchTeam, Multiplayer } from './multiplayer';
 import { AchievementEvent } from './achievement_event';
+import { MPMasterServer } from './mpmasterserver';
 
 // A class to store incoming web request data
 class WebRequest {
@@ -99,6 +100,7 @@ function route(path: string, methods: string[] = ["GET"]) {
 export class PQServer {
 
     webchatServer: WebchatServer
+    mpMasterServer: MPMasterServer
 
     constructor() {
 
@@ -137,6 +139,11 @@ export class PQServer {
         this.webchatServer = new WebchatServer();
         this.webchatServer.initialize();
         console.log("PQ Online Webchat Server Started");
+
+        console.log("Starting PQ Online Multiplayer Master Server");
+        this.mpMasterServer = new MPMasterServer();
+        this.mpMasterServer.initialize();
+        console.log("PQ Online Multiplayer Started");
 
         console.log("Starting PQ Online HTTP Server");
 

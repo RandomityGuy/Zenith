@@ -347,6 +347,8 @@ export class WebchatServer {
             sender.send(response);
             return true;
         }
+
+        // Commands to change prefix/suffix/flair
         if (command === "/prefix" || command === "/suffix" || command === "/flair") {
             if (context[0] === "list") {
                 let response = new WebchatResponse();
@@ -401,6 +403,7 @@ export class WebchatServer {
             return true;
         }
 
+        // Change color command
         if (command === "/color") {
             if (context.length > 0) {
                 if (Player.setColor(sender.userId, context[0])) {
@@ -418,6 +421,7 @@ export class WebchatServer {
             }
         }
 
+        // Kick/ban command
         if (command === "/kick" || command === "/ban") {
             if (sender.accessLevel === 1 || sender.accessLevel === 2 || sender.accessLevel === 4) {
                 if (context.length > 0) {
@@ -446,6 +450,7 @@ export class WebchatServer {
             }
         }
 
+        // Unban command
         if (command === "/unban") {
             if (sender.accessLevel === 1 || sender.accessLevel === 2 || sender.accessLevel === 4) {
                 if (context.length > 0) {
@@ -458,6 +463,7 @@ export class WebchatServer {
             }
         }
 
+        // Mute and unmute commands, no timed muted yet
         if (command === "/mute" || command === "/unmute") {
             if (sender.accessLevel === 1 || sender.accessLevel === 2 || sender.accessLevel === 4) {
                 if (context.length > 0) {
@@ -487,6 +493,36 @@ export class WebchatServer {
                         else
                             response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} Successfully ummuted the user!`);
                         sender.send(response);
+                        
+                    }
+                    return true;
+                }
+            }
+        }
+
+        // Command to change access level of a user lol
+        if (command === "/access") {
+            if (sender.accessLevel === 1 || sender.accessLevel === 2 || sender.accessLevel === 4) {
+                if (context.length > 1) {
+                    let response = new WebchatResponse();
+                    let target: WebchatPlayer = null;
+                    for (let c of this.clients) {
+                        if (c.username === context[0] || c.display === context[0]) {
+                            target = c;
+                            break;
+                        }
+                    }
+                    if (target !== null) {
+                        let targetLevel = Number.parseInt(context[1]);
+                        if (targetLevel <= sender.accessLevel) {
+                            Storage.query('UPDATE users SET accessLevel=@level WHERE id=@userId').run({ level: targetLevel, userId: target.userId });
+
+                            response.chat("SERVER", "SERVER", target.username, 0, `/whisper ${target.username} Your access level has been changed`);
+                            target.send(response);
+                            response = new WebchatResponse();
+                            response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} Successfully changed access level of the user!`);
+                            sender.send(response);
+                        }
                         
                     }
                     return true;
@@ -590,11 +626,11 @@ export class WebchatServer {
         this.clients.forEach(player => {
             if (!player.isGuest) {
                 let titleFlairData = Storage.query("SELECT accessLevel AS access, registerDate, colorValue AS color, donations, id, statusMsg AS status, titleFlair, titlePrefix, titleSuffix, username, name FROM users WHERE id = @userId;").get({ userId: player.userId }); // Taken from player.ts
-                let flair = Number.parseInt(titleFlairData.titleFlair);
-                let flairStr = "";
-                if (Storage.settings.chat_flairs.length > flair) {
-                    flairStr = Storage.settings.chat_flairs[flair];
-                }
+                let flair = titleFlairData.titleFlair;
+                let flairStr = flair;
+                // if (Storage.settings.chat_flairs.length > flair) {
+                //     flairStr = Storage.settings.chat_flairs[flair];
+                // }
                 response.userInfo(new WebchatUser(player.username, player.display, player.accessLevel, player.status, titleFlairData.color, flairStr, titleFlairData.titlePrefix, titleFlairData.titleSuffix));
             } else {
                 response.userInfo(new WebchatUser(player.username, player.username, 3, 0, "#000000", "", "", ""));
