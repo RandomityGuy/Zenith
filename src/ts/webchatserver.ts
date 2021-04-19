@@ -216,12 +216,7 @@ export class WebchatServer {
 
         // Disconnect
         if (command === "DISCONNECT") {
-            if (player.userId !== null) {
-                let seconds = Math.floor((new Date().getTime() - player.connectTime.getTime()) / 1000);
-                Storage.query("UPDATE users SET onlineTime = @time WHERE id=@userId;").run({ time: seconds, userId: player.userId });
-            }
-            this.clients.delete(player);
-            player.socket.destroy();
+            this.disconnectPlayer(player);
         }
 
         // Chat
@@ -422,6 +417,82 @@ export class WebchatServer {
                 }
             }
         }
+
+        if (command === "/kick" || command === "/ban") {
+            if (sender.accessLevel === 1 || sender.accessLevel === 2 || sender.accessLevel === 4) {
+                if (context.length > 0) {
+                    let response = new WebchatResponse();
+                    let target: WebchatPlayer = null;
+                    for (let c of this.clients) {
+                        if (c.username === context[0] || c.display === context[0]) {
+                            target = c;
+                            break;
+                        }
+                    }
+                    if (target !== null) {
+                        let reason = context.slice(1).join(' ');
+
+                        if (command === "/ban") {
+                            Storage.query("UPDATE users SET block=1 WHERE id=@userId").run({ userId: target.userId });
+                        }
+
+                        response.notify("kick", target.username, target.display, [reason]);
+                        this.clients.forEach(x => x.send(response));
+
+                        this.disconnectPlayer(target);
+                    }
+                    return true;
+                }
+            }
+        }
+
+        if (command === "/unban") {
+            if (sender.accessLevel === 1 || sender.accessLevel === 2 || sender.accessLevel === 4) {
+                if (context.length > 0) {
+                    Storage.query("UPDATE users SET block=1 WHERE username=@username").run({ username: context[0] });
+
+                    let response = new WebchatResponse();
+                    response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} Successfully unbanned the user!`);
+                    sender.send(response);
+                }
+            }
+        }
+
+        if (command === "/mute" || command === "/unmute") {
+            if (sender.accessLevel === 1 || sender.accessLevel === 2 || sender.accessLevel === 4) {
+                if (context.length > 0) {
+                    let response = new WebchatResponse();
+                    let target: WebchatPlayer = null;
+                    for (let c of this.clients) {
+                        if (c.username === context[0] || c.display === context[0]) {
+                            target = c;
+                            break;
+                        }
+                    }
+                    if (target !== null) {
+                        let webchatinfo = new WebchatInfo();
+                        webchatinfo.canChat(command === "/mute" ? false : true);
+                        response.info(webchatinfo);
+
+                        if (command === "/mute") {
+                            response.chat("SERVER", "SERVER", target.username, 0, `/whisper ${target.username} You have been muted!`);
+                        } else {
+                            response.chat("SERVER", "SERVER", target.username, 0, `/whisper ${target.username} You have been unmuted!`);
+                        }
+
+                        target.send(response);
+                        response = new WebchatResponse();
+                        if (command === "/mute")
+                            response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} Successfully muted the user!`);
+                        else
+                            response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} Successfully ummuted the user!`);
+                        sender.send(response);
+                        
+                    }
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -481,6 +552,16 @@ export class WebchatServer {
         let response = new WebchatResponse();
         response.notify("setlocation", player.username, player.display, [player.status.toString()]);
         this.clients.forEach(x => x.send(response));
+    }
+
+    // Handle player disconnect
+    disconnectPlayer(player: WebchatPlayer) {
+        if (player.userId !== null) {
+            let seconds = Math.floor((new Date().getTime() - player.connectTime.getTime()) / 1000);
+            Storage.query("UPDATE users SET onlineTime = @time WHERE id=@userId;").run({ time: seconds, userId: player.userId });
+        }
+        this.clients.delete(player);
+        player.socket.destroy();
     }
     
     // Gets the full display name with prefix suffix for a user
