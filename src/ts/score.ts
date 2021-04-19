@@ -60,16 +60,9 @@ export class Score {
         let lapTimes = Storage.query("SELECT mission_id, time as 'score', 'time' as score_type FROM user_lap_times WHERE user_id = @userId GROUP BY mission_id HAVING MIN(time);").all({ userId: userId })
         let quota100 = Storage.query("SELECT mission_id, score, score_type FROM user_scores WHERE user_id = @userId AND (modifiers & (1 << 4) = (1 << 4)) GROUP BY mission_id HAVING (CASE WHEN score_type='time' THEN MIN(score) ELSE MAX(score) END)").all({ userId: userId });
         let wrList = Storage.query(`
-        SELECT S.mission_id FROM (
-            SELECT missions.id AS mission_id, user_scores.score, user_scores.user_id 
-            FROM user_scores, mission_games, missions
-            WHERE missions.is_custom = 0 
-                AND missions.id = user_scores.mission_id 
-                AND mission_games.id = missions.game_id 
-                AND mission_games.game_type = 'Single Player'
-            GROUP BY mission_id HAVING MIN(sort)
-            ) AS S
-        WHERE user_id = @userId`).all({ userId: userId }).map(x => x.mission_id);
+            SELECT user_scores.mission_id 
+            FROM user_mission_wrs, user_scores
+            WHERE user_mission_wrs.score_id = user_scores.id AND user_scores.id = @userId`).all({ userId: userId }).map(x => x.mission_id);
         let dict = new Map<any, any>();
         topScoresData.forEach(x => {
             dict.set(Number.parseInt(x.mission_id), {
@@ -192,6 +185,8 @@ export class Score {
         // Generate the 'sort' column, huge hacx
         let sort = scoreType === "time" ? score : 10000000 - score;
 
+        // let scoreId = Storage.query("SELECT MAX(id) FROM user_scores;").get();
+
         // Check if its WR
         let isWR = false;
         if (sort < globaltopScore.sort) {
@@ -228,6 +223,14 @@ export class Score {
         // Calculate our rank
         let scoreId = Storage.query("SELECT MAX(id) AS scoreId FROM user_scores;").get(); // ehh
         scoreId = scoreId.scoreId;
+
+        // WR thing
+        if (isWR) {
+            // Do the WR table thing
+            Storage.query('REPLACE INTO user_mission_wrs VALUES(@missionId, @scoreId)').run({ missionId: missionId, scoreId: scoreId });
+        }
+
+
         let rank = Storage.query(`
         SELECT placement
         FROM (
