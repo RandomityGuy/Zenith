@@ -86,6 +86,15 @@ export class WebchatServer {
         this.clients = new Set<WebchatPlayer>();
     }
 
+    // Stops the server
+    dispose() {
+        // Stopping
+        this.clients.forEach(x => {
+            x.socket.destroy();
+        })
+        this.server.close();
+    }
+
     // Received when a player connects
     onConnect(socket: net.Socket) {
         let player = new WebchatPlayer(socket);

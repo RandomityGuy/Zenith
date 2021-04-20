@@ -40,6 +40,11 @@ export class MPMasterServer {
         this.socket.bind(port, hostname);
     }
 
+    // Stops the server
+    dispose() {
+        this.socket.close();
+    }
+
     // Received on error
     onError(err: Error) {
         console.log(err);

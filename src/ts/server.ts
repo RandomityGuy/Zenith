@@ -101,6 +101,7 @@ export class PQServer {
 
     webchatServer: WebchatServer
     mpMasterServer: MPMasterServer
+    mainServer: http.Server
 
     constructor() {
 
@@ -147,7 +148,7 @@ export class PQServer {
 
         console.log("Starting PQ Online HTTP Server");
 
-        http.createServer((req, res) => {
+        this.mainServer = http.createServer((req, res) => {
             if (req.method === 'POST') {
                 let data: Buffer[] = [];
                 req.on('data', chunk => data.push(chunk));
@@ -213,6 +214,17 @@ export class PQServer {
         res.writeHead(retresponse.code, Object.fromEntries(retresponse.headers));
         // Now write the response
         res.end(retresponse.response);
+    }
+
+    // Stops the server
+    dispose() {
+        console.log("Stopping Webchat Server");
+        this.webchatServer.dispose();
+        console.log("Stopping Multiplayer Master Server");
+        this.mpMasterServer.dispose();
+        console.log("Stopping HTTP Server");
+        this.mainServer.close();
+        Storage.dispose();
     }
 
     // SERVER
