@@ -62,7 +62,7 @@ export class Score {
         let wrList = Storage.query(`
             SELECT user_scores.mission_id 
             FROM user_mission_wrs, user_scores
-            WHERE user_mission_wrs.score_id = user_scores.id AND user_scores.id = @userId`).all({ userId: userId }).map(x => x.mission_id);
+            WHERE user_mission_wrs.score_id = user_scores.id AND user_scores.user_id = @userId`).all({ userId: userId }).map(x => x.mission_id);
         let dict = new Map<any, any>();
         topScoresData.forEach(x => {
             dict.set(Number.parseInt(x.mission_id), {
