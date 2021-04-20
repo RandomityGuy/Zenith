@@ -151,7 +151,7 @@ export class WebchatResponse {
 
     // Other stuff
     flair(flair_id: string) {
-        this.text.push(`"FLAIR ${flair_id}`);
+        this.text.push(`FLAIR ${flair_id}`);
     }
 
     winterfest() {

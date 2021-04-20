@@ -48,6 +48,9 @@ class WebchatPlayer {
     // The time when the user connected to the server
     connectTime: Date;
 
+    // Whether the guy was logging in again
+    relogin: boolean = false;
+
     constructor(socket: net.Socket) {
         this.socket = socket;
     }
@@ -58,10 +61,17 @@ class WebchatPlayer {
     }
 }
 
+interface WebchatMessage {
+    senderNick: string,
+    message: string
+}
+
 export class WebchatServer {
     server: net.Server
 
     clients: Set<WebchatPlayer>
+
+    messages: WebchatMessage[] = [];
 
     // Start up the webchat server
     initialize() {
@@ -115,7 +125,12 @@ export class WebchatServer {
         player.rawReceivedData += datastr;
         while (player.rawReceivedData.includes("\r\n")) {
             let line = player.rawReceivedData.slice(0, player.rawReceivedData.indexOf("\r\n"));
-            this.onData(player, line);
+            try {
+                this.onData(player, line);
+            }
+            catch (e) {
+                console.log(e);
+            }
             player.rawReceivedData = player.rawReceivedData.slice(player.rawReceivedData.indexOf("\r\n") + 2);
         }
     }
@@ -138,6 +153,11 @@ export class WebchatServer {
         // Verify the player, authentication stuff
         if (command === "VERIFY") {
             this.handleLogin(player, parts);
+        }
+
+        // Whether the guy was relogging in again
+        if (command === "RELOGIN") {
+            player.relogin = true;
         }
 
         // Set the session data
@@ -228,6 +248,7 @@ export class WebchatServer {
                 response.chat(player.username, player.display, dest, player.accessLevel, conts);
                 // Send to proper destinations
                 if (dest === "") {
+                    this.messages.push({ senderNick: player.display, message: conts });
                     this.clients.forEach(x => x.send(response));
                 } else {
                     for (let client of this.clients) {
@@ -325,6 +346,9 @@ export class WebchatServer {
                 response.winterfest()
 
             response.logged();
+
+            if (!player.relogin)
+                this.generateOldMessages(response);
         } else {
             if (authdata.reason === "username" || authdata.reason === "password") {
                 response.identify("INVALID");
@@ -636,5 +660,15 @@ export class WebchatServer {
                 response.userInfo(new WebchatUser(player.username, player.username, 3, 0, "#000000", "", "", ""));
             }
         })
+    }
+
+    // Generates a list of last 20 messages
+    generateOldMessages(response: WebchatResponse) {
+        let msgs = this.messages.slice(-20);
+        for (let msg of msgs) {
+            response.chat("[OLD] " + msg.senderNick,"[OLD] " + msg.senderNick, "", 0, msg.message);
+        }
+        response.chat("SERVER", "SERVER", "", 1, "Previous 20 Chat Messages");
+        response.chat("SERVER", "SERVER", "", 1, "----------------------------------");
     }
 }
