@@ -192,12 +192,16 @@ export class PQServer {
 
                 if (!gameOutdated) {
                     // Get the response from the web route handler function
-                    let resp = route.func.call(this, webreq);
-                    // Handle the different return values
-                    if (typeof resp === "string")
-                        retresponse = this.response(resp, webreq, 200);
-                    else if (resp instanceof Object)
-                        retresponse = this.response(resp, webreq, 200);
+                    try {
+                        let resp = route.func.call(this, webreq);
+                        // Handle the different return values
+                        if (typeof resp === "string")
+                            retresponse = this.response(resp, webreq, 200);
+                        else if (resp instanceof Object)
+                            retresponse = this.response(resp, webreq, 200);
+                    } catch (e) {
+                        console.log(e);
+                    }
                 }
 
                 console.log(`OUTGOING ${route.path}`);

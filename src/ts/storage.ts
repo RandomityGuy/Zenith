@@ -48,7 +48,7 @@ export class Storage {
         file = fs.readFileSync(path.join(__dirname,'storage', 'versions.json'), 'utf-8')
         Storage.gameVersionList = JSON.parse(file);
 
-        this.queryCache = new Map<string, Database.Statement>();
+        Storage.queryCache = new Map<string, Database.Statement>();
     }
 
     // Used to create queries for the sqlite database, with caching
