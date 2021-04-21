@@ -1,6 +1,9 @@
 import * as Database from "better-sqlite3";
 import * as fs from 'fs-extra'
 import * as path from 'path'
+import * as https from 'https'
+import * as http from 'http'
+import * as url from 'url'
 
 export class Storage {
 
@@ -25,6 +28,9 @@ export class Storage {
         PQServer: string,
         webchatServer: string,
         mpMasterServer: string,
+
+        webchatWebhook: string,
+        errorWebhook: string,
 
         gameVersion: number
     }
@@ -63,5 +69,34 @@ export class Storage {
     
     static dispose() {
         Storage.db.close();
+    }
+
+    static log(username: string, content: string, type: "log" | "error" = "log") {
+        const data = JSON.stringify({
+            username: username,
+            content: content
+        })
+
+        let webhookurl = type === "log" ? new url.URL(Storage.settings.webchatWebhook) : new url.URL(Storage.settings.errorWebhook)
+
+        const options = {
+            hostname: webhookurl.hostname,
+            port: 80,
+            path: webhookurl.pathname,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': data.length
+            }
+        }
+
+        const req = webhookurl.protocol === "https:" ? https.request(options) : http.request(options);
+
+        req.on('error', error => {
+            console.error(error)
+        })
+
+        req.write(data)
+        req.end()
     }
 }

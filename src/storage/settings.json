@@ -17,6 +17,9 @@
 	"webchatServer": "localhost:420",
 	"mpMasterServer": "localhost:666",
 
+	"webchatWebhook": "",
+	"errorWebhook": "",
+
 	"gameVersion": 9000,
 
 	"chat_colors": [

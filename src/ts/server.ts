@@ -201,6 +201,7 @@ export class PQServer {
                         else if (resp instanceof Object)
                             retresponse = this.response(resp, webreq, 200);
                     } catch (e) {
+                        Storage.log("Zenith-Error",e.toString(), "error");
                         console.log(e);
                     }
                 }
@@ -927,6 +928,15 @@ export class PQServer {
         Storage.query("INSERT INTO metrics(user_id,metrics) VALUES(@userId,@metrics);").run({ userId: userId, metrics: metricsString });
         
         return "SUCCESS";
+    }
+
+    // DEV ROUTE DONT USE
+    @route("/api/webchat", ["GET"])
+    sendWebchatMessage(req: WebRequest) {
+        let author = req.searchParams.get("username");
+        let conts = req.searchParams.get("message");
+
+        this.webchatServer.sendMessage(author, conts);
     }
 
     // Helper function to retrieve mission ids

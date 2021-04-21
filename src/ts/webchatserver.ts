@@ -138,6 +138,7 @@ export class WebchatServer {
                 this.onData(player, line);
             }
             catch (e) {
+                Storage.log("Zenith-Error",e.toString(), "error");
                 console.log(e);
             }
             player.rawReceivedData = player.rawReceivedData.slice(player.rawReceivedData.indexOf("\r\n") + 2);
@@ -258,6 +259,7 @@ export class WebchatServer {
                 // Send to proper destinations
                 if (dest === "") {
                     this.messages.push({ senderNick: player.display, message: conts });
+                    Storage.log(player.display,conts);
                     this.clients.forEach(x => x.send(response));
                 } else {
                     for (let client of this.clients) {
@@ -595,6 +597,7 @@ export class WebchatServer {
     notifyJoin(player: WebchatPlayer) {
         let response = new WebchatResponse();
         this.generateUserList(response);
+        Storage.log("Zenith-Server",`${player.display} has logged in!`);
 
         response.notify("login", player.username, player.display, []);
         this.clients.forEach(x => x.send(response));
@@ -604,6 +607,7 @@ export class WebchatServer {
     notifyLeave(player: WebchatPlayer) {
         let response = new WebchatResponse();
         this.generateUserList(response);
+        Storage.log("Zenith-Server",`${player.display} has logged out!`);
 
         response.notify("logout", player.username, player.display, []);
         this.clients.forEach(x => x.send(response));
@@ -631,6 +635,13 @@ export class WebchatServer {
         }
         this.clients.delete(player);
         player.socket.destroy();
+    }
+
+    // Sends a webchat message
+    sendMessage(userame: string, contents: string) {
+        let response = new WebchatResponse();
+        response.chat(userame, userame, "", 0, contents);
+        this.clients.forEach(x => x.send(response));
     }
     
     // Gets the full display name with prefix suffix for a user
