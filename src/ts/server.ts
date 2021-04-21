@@ -366,7 +366,10 @@ export class PQServer {
     // ACHIEVEMENT
     @route("/api/Achievement/GetAchievementList.php", ["GET", "POST"])
     getAchievementList(req: WebRequest) {
-        let obj = Achievement.getAchievementList();
+        let userId = 0;
+        if (req.searchParams.has("username") && req.searchParams.has("key"))
+            userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let obj = Achievement.getAchievementList(userId);
         return obj;
     }
 

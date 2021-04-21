@@ -82,7 +82,7 @@ export class AchievementSP {
             // let totalPars = parCounts.map(x => x.parScores).reduce((total, current) => (total + current), 0);
 
             // Any MBP Par
-            let mbpPar = parCounts.find(x => x.game_id === 1);
+            let mbpPar = parCounts.find(x => x.game_id === 2);
             if (mbpPar !== undefined) {
                 if (mbpPar.parScores > 0 && !currentAchievements.has(3)) {
                     Achievement.grantAchievement(userId, 3);
@@ -90,7 +90,7 @@ export class AchievementSP {
             }
 
             // Any MBU Par
-            let mbuPar = parCounts.find(x => x.game_id === 2);
+            let mbuPar = parCounts.find(x => x.game_id === 3);
             if (mbuPar !== undefined) {
                 if (mbuPar.parScores > 0 && !currentAchievements.has(31)) {
                     Achievement.grantAchievement(userId, 31);

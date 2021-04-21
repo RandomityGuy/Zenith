@@ -115,6 +115,7 @@ export class WebchatServer {
             let seconds = Math.floor((new Date().getTime() - player.connectTime.getTime()) / 1000);
             Storage.query("UPDATE users SET onlineTime = @time WHERE id=@userId;").run({ time: seconds, userId: player.userId });
         }
+        this.notifyLeave(player);
         this.clients.delete(player);
     }
 
@@ -125,6 +126,7 @@ export class WebchatServer {
             Storage.query("UPDATE users SET onlineTime = @time WHERE id=@userId;").run({ time: seconds, userId: player.userId });
         }
         console.log(`Player ${player.username} errored out due to ${error.message}`);
+        this.notifyLeave(player);
         this.clients.delete(player);
     }
 
@@ -454,6 +456,7 @@ export class WebchatServer {
                     return true;
                 }
             }
+            return true;
         }
 
         // Kick/ban command
@@ -483,6 +486,7 @@ export class WebchatServer {
                     return true;
                 }
             }
+            return true;
         }
 
         // Unban command
@@ -496,6 +500,7 @@ export class WebchatServer {
                     sender.send(response);
                 }
             }
+            return true;
         }
 
         // Mute and unmute commands, no timed muted yet
@@ -533,6 +538,7 @@ export class WebchatServer {
                     return true;
                 }
             }
+            return true;
         }
 
         // Command to change access level of a user lol
@@ -563,6 +569,7 @@ export class WebchatServer {
                     return true;
                 }
             }
+            return true;
         }
         return false;
     }
@@ -642,6 +649,7 @@ export class WebchatServer {
         let response = new WebchatResponse();
         response.chat(userame, userame, "", 0, contents);
         this.clients.forEach(x => x.send(response));
+        this.messages.push({ senderNick: userame, message: userame });
     }
     
     // Gets the full display name with prefix suffix for a user

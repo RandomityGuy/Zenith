@@ -1,5 +1,6 @@
 import * as fs from 'fs-extra'
 import * as path from 'path'
+import { Storage } from './storage';
 import { Util } from './util'
 
 export class Replay {
@@ -19,9 +20,12 @@ export class Replay {
     // Saves the replay for a given mission
     static recordReplay(missionId: number, type: "Replay" | "Egg", data: string) {
         try {
+            fs.ensureDirSync("__dirname, 'storage', 'replays'");
             let filepath = path.join(__dirname, 'storage', 'replays', `${missionId}_${type}.rrec`);
             fs.writeFileSync(filepath, data, { encoding: "base64" });
-        } catch {
+        } catch (e) {
+            console.log(e);
+            Storage.log("Zenith-Error", e.toString(), "error");
             return "RETRY";
         }
         return "SUCCESS";
