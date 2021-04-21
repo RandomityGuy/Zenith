@@ -81,7 +81,7 @@ export class Storage {
 
         const options = {
             hostname: webhookurl.hostname,
-            port: 80,
+            port: webhookurl.protocol === "https:" ? 443 : 80,
             path: webhookurl.pathname,
             method: 'POST',
             headers: {
