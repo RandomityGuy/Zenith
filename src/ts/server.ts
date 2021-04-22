@@ -840,21 +840,21 @@ export class PQServer {
         
         // Yeah so idk how all of this works, its just a big gamble. Lets get a count of times the trigger was triggered
 
-        let triggerCount = Storage.query('SELECT COUNT(*) AS triggerCount FROM user_event_triggers WHERE user_id=@userId AND "trigger"=@trigger;').get({ userId: userId, trigger: trigger });
-        triggerCount = triggerCount.triggerCount;
+        // let triggerCount = Storage.query('SELECT COUNT(*) AS triggerCount FROM user_event_triggers WHERE user_id=@userId AND "trigger"=@trigger;').get({ userId: userId, trigger: trigger });
+        // triggerCount = triggerCount.triggerCount;
 
         
-        Storage.query("INSERT INTO user_event_triggers VALUES(@userId,@trigger,DATETIME('now','localtime'));").run({ userId: userId, trigger: trigger });
+        // Storage.query("INSERT INTO user_event_triggers VALUES(@userId,@trigger,DATETIME('now','localtime'));").run({ userId: userId, trigger: trigger });
         
-        // Do this gay shit
-        let userName = Player.getUsername(userId);
-        let topScores = Score.getPersonalTopScoreList(userId);
-        let achievementList = Player.getPlayerAchievements(userName);
-        AchievementEvent.updateEventAchievements(userId, achievementList.achievements, topScores);
-        Achievement.checkTitleFlairUnlocks(userId, achievementList.achievements, topScores);
+        // // Do this gay shit
+        // let userName = Player.getUsername(userId);
+        // let topScores = Score.getPersonalTopScoreList(userId);
+        // let achievementList = Player.getPlayerAchievements(userName);
+        // AchievementEvent.updateEventAchievements(userId, achievementList.achievements, topScores);
+        // Achievement.checkTitleFlairUnlocks(userId, achievementList.achievements, topScores);
         
-        let obj = triggerCount;
-        return obj;
+        // let obj = triggerCount;
+        return "0";
     }
 
     // REPLAY
@@ -945,7 +945,6 @@ export class PQServer {
     @route("/api/database", ["GET"])
     getDatabase(req: WebRequest) {
         Storage.db.pragma('wal_checkpoint(RESTART)'); // First, checkpoint the WAL to the database so that its changes get backed up too
-
         return Util.responseAsFile(path.join(__dirname, 'db', 'leaderboards.db'))
     }
 
