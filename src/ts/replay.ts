@@ -20,7 +20,7 @@ export class Replay {
     // Saves the replay for a given mission
     static recordReplay(missionId: number, type: "Replay" | "Egg", data: string) {
         try {
-            fs.ensureDirSync("__dirname, 'storage', 'replays'");
+            fs.ensureDirSync(path.join(__dirname, 'storage', 'replays'));
             let filepath = path.join(__dirname, 'storage', 'replays', `${missionId}_${type}.rrec`);
             fs.writeFileSync(filepath, data, { encoding: "base64" });
         } catch (e) {

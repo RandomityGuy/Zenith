@@ -15,28 +15,41 @@ export class Achievement {
         // Yeah hardcoded... :pensive:
         let achievementDict = new Map<string, any[]>();
         achievementDict.set("Single Player", Storage.query(`
-        SELECT bitmap_extent, 'Single Player' AS category, description, id, "index", rating, title 
-        FROM achievement_names 
-        WHERE category_id IN (1,4) AND mask = 0
-        UNION
-        SELECT achievement_names.bitmap_extent, 'Single Player' AS category, achievement_names.description, achievement_names.id, "index", achievement_names.rating, achievement_names.title 
-        FROM user_achievements, achievement_names
-        WHERE user_achievements.achievement_id = achievement_names.id AND mask = 1 AND user_id=@userId AND achievement_names.category_id IN (1,4);`).all({ userId: userId }));
+        SELECT  bitmap_extent, 'Single Player' AS category, description, id, "index", rating, title 
+        FROM (
+        	SELECT bitmap_extent, 'Single Player' AS category, description, id, "index", rating, title, sort
+        	FROM achievement_names 
+        	WHERE category_id IN (1,4) AND mask = 0
+        	UNION
+        	SELECT achievement_names.bitmap_extent, 'Single Player' AS category, achievement_names.description, achievement_names.id, "index", achievement_names.rating, achievement_names.title, sort
+        	FROM user_achievements, achievement_names
+        	WHERE user_achievements.achievement_id = achievement_names.id AND mask = 1 AND user_id=@userId AND achievement_names.category_id IN (1,4)
+        )
+        ORDER BY sort`).all({ userId: userId }));
         achievementDict.set("Multiplayer", Storage.query(`
-        SELECT bitmap_extent, 'Multiplayer' AS category, description, id, "index", rating, title 
-        FROM achievement_names 
-        WHERE category_id = 2 AND mask = 0
-        UNION
-        SELECT achievement_names.bitmap_extent, 'Multiplayer' AS category, achievement_names.description, achievement_names.id, "index", achievement_names.rating, achievement_names.title 
-        FROM user_achievements, achievement_names
-        WHERE user_achievements.achievement_id = achievement_names.id AND mask = 1 AND user_id=@userId AND achievement_names.category_id = 2;`).all({ userId: userId }));
-        achievementDict.set("Event", Storage.query(`SELECT bitmap_extent, 'Event' AS category, description, id, "index", rating, title 
-        FROM achievement_names 
-        WHERE category_id = 3 AND mask = 0
-        UNION
-        SELECT achievement_names.bitmap_extent, 'Event' AS category, achievement_names.description, achievement_names.id, "index", achievement_names.rating, achievement_names.title 
-        FROM user_achievements, achievement_names
-        WHERE user_achievements.achievement_id = achievement_names.id AND mask = 1 AND user_id=@userId AND achievement_names.category_id = 3;`).all({ userId: userId }));
+        SELECT  bitmap_extent, 'Multiplayer' AS category, description, id, "index", rating, title 
+        FROM (
+        	SELECT bitmap_extent, 'Multiplayer' AS category, description, id, "index", rating, title, sort
+        	FROM achievement_names 
+        	WHERE category_id = 2 AND mask = 0
+        	UNION
+        	SELECT achievement_names.bitmap_extent, 'Multiplayer' AS category, achievement_names.description, achievement_names.id, "index", achievement_names.rating, achievement_names.title, sort
+        	FROM user_achievements, achievement_names
+        	WHERE user_achievements.achievement_id = achievement_names.id AND mask = 1 AND user_id=@userId AND achievement_names.category_id = 2
+        )
+        ORDER BY sort`).all({ userId: userId }));
+        achievementDict.set("Event", Storage.query(`
+        SELECT  bitmap_extent, 'Event' AS category, description, id, "index", rating, title 
+        FROM (
+        	SELECT bitmap_extent, 'Event' AS category, description, id, "index", rating, title, sort
+        	FROM achievement_names 
+        	WHERE category_id = 3 AND mask = 0
+        	UNION
+        	SELECT achievement_names.bitmap_extent, 'Event' AS category, achievement_names.description, achievement_names.id, "index", achievement_names.rating, achievement_names.title, sort
+        	FROM user_achievements, achievement_names
+        	WHERE user_achievements.achievement_id = achievement_names.id AND mask = 1 AND user_id=@userId AND achievement_names.category_id = 3
+        )
+        ORDER BY sort`).all({ userId: userId }));
 
         let obj = {
             achievements: Object.fromEntries(achievementDict),

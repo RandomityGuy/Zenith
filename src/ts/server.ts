@@ -933,13 +933,30 @@ export class PQServer {
         return "SUCCESS";
     }
 
-    // DEV ROUTE DONT USE
+    // DEV ROUTES DONT USE, DELETE THESE DURING PROD
     @route("/api/webchat", ["GET"])
     sendWebchatMessage(req: WebRequest) {
         let author = req.searchParams.get("username");
         let conts = req.searchParams.get("message");
 
         this.webchatServer.sendMessage(author, conts);
+    }
+
+    @route("/api/database", ["GET"])
+    getDatabase(req: WebRequest) {
+        Storage.db.pragma('wal_checkpoint(RESTART)'); // First, checkpoint the WAL to the database so that its changes get backed up too
+
+        return Util.responseAsFile(path.join(__dirname, 'db', 'leaderboards.db'))
+    }
+
+    @route("/api/databasequery", ["GET"])
+    databaseQuery(req: WebRequest) {
+        let query = req.searchParams.get("query");
+        let stmt = Storage.query(query);
+
+        Storage.db.transaction(() => {
+            return stmt.all().toString();
+        })
     }
 
     // Helper function to retrieve mission ids
