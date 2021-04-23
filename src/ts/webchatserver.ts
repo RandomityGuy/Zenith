@@ -649,7 +649,7 @@ export class WebchatServer {
         let response = new WebchatResponse();
         response.chat(userame, userame, "", 0, contents);
         this.clients.forEach(x => x.send(response));
-        this.messages.push({ senderNick: userame, message: userame });
+        this.messages.push({ senderNick: userame, message: contents });
     }
     
     // Gets the full display name with prefix suffix for a user

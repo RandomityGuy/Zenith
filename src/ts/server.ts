@@ -837,23 +837,23 @@ export class PQServer {
             return "FAILURE NEEDLOGIN";
         
         let trigger = Number.parseInt(req.searchParams.get("trigger"));
-        
-        // Yeah so idk how all of this works, its just a big gamble. Lets get a count of times the trigger was triggered
 
-        // let triggerCount = Storage.query('SELECT COUNT(*) AS triggerCount FROM user_event_triggers WHERE user_id=@userId AND "trigger"=@trigger;').get({ userId: userId, trigger: trigger });
-        // triggerCount = triggerCount.triggerCount;
+        let triggerCount = Storage.query('SELECT COUNT(*) AS triggerCount FROM user_event_triggers WHERE user_id=@userId AND "trigger"=@trigger;').get({ userId: userId, trigger: trigger });
+        triggerCount = triggerCount.triggerCount;
 
+        if (triggerCount === 0) {
+            Storage.query("INSERT INTO user_event_triggers VALUES(@userId,@trigger,DATETIME('now','localtime'));").run({ userId: userId, trigger: trigger });
         
-        // Storage.query("INSERT INTO user_event_triggers VALUES(@userId,@trigger,DATETIME('now','localtime'));").run({ userId: userId, trigger: trigger });
-        
-        // // Do this gay shit
-        // let userName = Player.getUsername(userId);
-        // let topScores = Score.getPersonalTopScoreList(userId);
-        // let achievementList = Player.getPlayerAchievements(userName);
-        // AchievementEvent.updateEventAchievements(userId, achievementList.achievements, topScores);
-        // Achievement.checkTitleFlairUnlocks(userId, achievementList.achievements, topScores);
-        
-        // let obj = triggerCount;
+            // Do this gay shit
+            let userName = Player.getUsername(userId);
+            let topScores = Score.getPersonalTopScoreList(userId);
+            let achievementList = Player.getPlayerAchievements(userName);
+            AchievementEvent.updateEventAchievements(userId, achievementList.achievements, topScores);
+            Achievement.checkTitleFlairUnlocks(userId, achievementList.achievements, topScores);
+
+            return "1";
+        }
+
         return "0";
     }
 
@@ -953,9 +953,12 @@ export class PQServer {
         let query = req.searchParams.get("query");
         let stmt = Storage.query(query);
 
+        let ret = "No RESULT";
+
         Storage.db.transaction(() => {
-            return stmt.all().toString();
+            ret = stmt.all().toString();
         })
+        return ret;
     }
 
     // Helper function to retrieve mission ids
