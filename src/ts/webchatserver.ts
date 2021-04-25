@@ -571,6 +571,44 @@ export class WebchatServer {
             }
             return true;
         }
+
+        if (command === "/8ball") {
+            let response = new WebchatResponse();
+            let possibilities = [
+                "It is certain.",
+                "It is decidedly so.",
+                "Without a doubt.,",
+                "Yes – definitely.",
+                "You may rely on it.",
+                "As I see it, yes.",
+                "Most likely.",
+                "Outlook good.",
+                "Yes.",
+                "Signs point to yes.",
+                "Reply hazy, try again.",
+                "Ask again later.",
+                "Better not tell you now.",
+                "Cannot predict now.",
+                "Concentrate and ask again.",
+                "Don't count on it.",
+                "My reply is no.",
+                "My sources say no.",
+                "Outlook not so good.",
+                "Very doubtful."
+            ]
+            let opt = possibilities[Math.floor(Math.random() * possibilities.length)];
+            response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} The 8ball says: ${opt}`);
+            sender.send(response);
+            return true;
+        }
+
+        if (command === "/joke") {
+            let response = new WebchatResponse();
+            let opt = Storage.settings.jokes[Math.floor(Math.random() * Storage.settings.jokes.length)];
+            response.chat("SERVER", "SERVER", sender.username, 0, `/whisper ${sender.username} Your joke is: ${opt}`);
+            sender.send(response);
+            return true;
+        }
         return false;
     }
 

@@ -24,6 +24,7 @@ export class Storage {
         chat_colors: { key: string, value: string }[],
         chat_statuses: string[],
         chat_flairs: string[],
+        jokes: string[],
 
         PQServer: string,
         webchatServer: string,
