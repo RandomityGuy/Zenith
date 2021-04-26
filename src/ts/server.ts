@@ -1003,6 +1003,8 @@ export class PQServer {
         let userId: number = null;
         if (hasPw) {
             userId = Player.authenticatePwd(req.searchParams.get("username"), req.searchParams.get("password"));
+            if (userId !== null)
+                return userId;
         }
         // Fallback if password failed
         if (hasKey && userId === null) {
