@@ -294,7 +294,7 @@ export class PQServer {
             return "ARGUMENT username";
         if (!req.searchParams.has("key"))
             return "ARGUMENT key";
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null) {
             return "FAILURE NEEDLOGIN";
         } else {
@@ -316,7 +316,7 @@ export class PQServer {
         if (typeof missionId === "string")
             return missionId; // Throw the error message
         
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null) {
             return "FAILURE NEEDLOGIN";
         }
@@ -337,7 +337,7 @@ export class PQServer {
             return "ARGUMENT username";
         if (!req.searchParams.has("key"))
             return "ARGUMENT key";
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null) {
             return "FAILURE NEEDLOGIN";
         } else {
@@ -354,7 +354,7 @@ export class PQServer {
             return "ARGUMENT key";
         if (!req.searchParams.has("marbleId"))
             return "ARGUMENT marbleId";
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null) {
             return "FAILURE NEEDLOGIN";
         } else {
@@ -368,7 +368,7 @@ export class PQServer {
     getAchievementList(req: WebRequest) {
         let userId = 0;
         if (req.searchParams.has("username") && req.searchParams.has("key"))
-            userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+            userId = this.authenticate(req);
         let obj = Achievement.getAchievementList(userId);
         return obj;
     }
@@ -381,7 +381,7 @@ export class PQServer {
             return "ARGUMENT key";
         if (!req.searchParams.has("achievement"))
             return "ARGUMENT achievement";
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null)
             return "FAILURE NEEDLOGIN";
         let obj = Achievement.recordAchievement(Number.parseInt(userId), Number.parseInt(req.searchParams.get("achievement")));
@@ -395,7 +395,7 @@ export class PQServer {
             return "ARGUMENT username";
         if (!req.searchParams.has("key"))
             return "ARGUMENT key";
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null)
             return "FAILURE NEEDLOGIN";
         
@@ -409,7 +409,7 @@ export class PQServer {
             return "ARGUMENT username";
         if (!req.searchParams.has("key"))
             return "ARGUMENT key";
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null)
             return "FAILURE NEEDLOGIN";
         
@@ -461,7 +461,7 @@ export class PQServer {
         if (typeof missionId === "string")
             return missionId; // Throw the error message
         
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null)
             return "FAILURE NEEDLOGIN";
         
@@ -578,7 +578,7 @@ export class PQServer {
         if (req.searchParams.has("user"))
             targetUser = req.searchParams.get("user");
         
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null)
             return "FAILURE NEEDLOGIN";
         
@@ -599,7 +599,7 @@ export class PQServer {
         if (req.searchParams.has("user"))
             targetUser = req.searchParams.get("user");
         
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null)
             return "FAILURE NEEDLOGIN";
         
@@ -630,7 +630,7 @@ export class PQServer {
             return missionId; // Throw the error message
         
         
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null)
             return "FAILURE NEEDLOGIN";
         
@@ -648,7 +648,7 @@ export class PQServer {
             return "ARGUMENT key";
         if (!req.searchParams.has("session"))
             return "ARGUMENT session";
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null)
             return {
                 verification: "FAIL"
@@ -734,7 +734,7 @@ export class PQServer {
             return missionId; // Throw the error message
         
         
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null)
             return "FAILURE NEEDLOGIN";
         
@@ -832,7 +832,7 @@ export class PQServer {
         if (!req.searchParams.has("trigger"))
             return "ARGUMENT trigger";
         
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null)
             return "FAILURE NEEDLOGIN";
         
@@ -873,7 +873,7 @@ export class PQServer {
         if (typeof missionId === "string")
             return missionId; // Throw the error message
         
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null)
             return "FAILURE NEEDLOGIN";
         
@@ -898,7 +898,7 @@ export class PQServer {
         if (typeof missionId === "string")
             return missionId; // Throw the error message
         
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null)
             return "FAILURE NEEDLOGIN";
         
@@ -914,7 +914,7 @@ export class PQServer {
             return "ARGUMENT username";
         if (!req.searchParams.has("key"))
             return "ARGUMENT key";
-        let userId = Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        let userId = this.authenticate(req);
         if (userId === null)
             return "FAILURE";
         
@@ -948,16 +948,23 @@ export class PQServer {
         return Util.responseAsFile(path.join(__dirname, 'db', 'leaderboards.db'))
     }
 
+    @route("/api/databaserun", ["GET"])
+    databaseQueryRun(req: WebRequest) {
+        let query = req.searchParams.get("query");
+        let stmt = Storage.query(query);
+
+        let ret = stmt.run().changes.toString();
+        return ret;
+    }
+
+
     @route("/api/databasequery", ["GET"])
     databaseQuery(req: WebRequest) {
         let query = req.searchParams.get("query");
         let stmt = Storage.query(query);
 
-        let ret = "No RESULT";
+        let ret = stmt.all().toString();
 
-        Storage.db.transaction(() => {
-            ret = stmt.all().toString();
-        })
         return ret;
     }
 
@@ -981,6 +988,27 @@ export class PQServer {
             
             return Mission.getMissionId(req.searchParams.get("missionFile"), decodeURIComponent(req.searchParams.get("missionName")).replace(/\+/g,' '), req.searchParams.get("missionHash"), req.searchParams.get("missionGamemode"), Number.parseInt(req.searchParams.get("difficultyId")));
         }
+    }
+
+    // Helper function for authentication stuff
+    authenticate(req: WebRequest) {
+        if (!req.searchParams.has("username"))
+            return "ARGUMENT username";
+        let hasKey = req.searchParams.has("key");
+        let hasPw = req.searchParams.has("password");
+        if (!hasPw && !hasKey)
+            return "ARGUMENT key";
+        
+        // (If we have password we auth using THAT first;
+        let userId: number = null;
+        if (hasPw) {
+            userId = Player.authenticatePwd(req.searchParams.get("username"), req.searchParams.get("password"));
+        }
+        // Fallback if password failed
+        if (hasKey && userId === null) {
+            return Player.authenticate(req.searchParams.get("username"), req.searchParams.get("key"));
+        }
+        return "ARGUMENT key";
     }
 
     @route("/")

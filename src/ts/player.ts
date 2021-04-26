@@ -192,6 +192,25 @@ export class Player {
         return null;
     }
 
+    // Helper function to authenticate using username password, same thing as above
+    static authenticatePwd(username: string, password: string) {
+        password = this.deGarbledeguck(password);
+
+        if (Player.userExists(username)) {
+        
+            let result = Storage.query(`SELECT id, password FROM users WHERE username=@username;`).get({ username: username });
+            if (result.block) {
+                // Yeah the account is banned
+                return null;
+            }
+
+            if (bcrypt.compareSync(password, result.password)) {
+                return result.id;
+            }
+        }
+        return null;
+    }
+
     // Get the top players in the leaderboards
     static getTopPlayers() {	
         let formatRating = (category: string) => {
