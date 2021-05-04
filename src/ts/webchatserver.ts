@@ -113,7 +113,7 @@ export class WebchatServer {
         // Update the total time online
         if (player.userId !== null) {
             let seconds = Math.floor((new Date().getTime() - player.connectTime.getTime()) / 1000);
-            Storage.query("UPDATE users SET onlineTime = @time WHERE id=@userId;").run({ time: seconds, userId: player.userId });
+            Storage.query("UPDATE users SET onlineTime = onlineTime + @time WHERE id=@userId;").run({ time: seconds, userId: player.userId });
         }
         this.notifyLeave(player);
         this.clients.delete(player);
@@ -123,7 +123,7 @@ export class WebchatServer {
     onError(player: WebchatPlayer, error: Error) {
         if (player.userId !== null) {
             let seconds = Math.floor((new Date().getTime() - player.connectTime.getTime()) / 1000);
-            Storage.query("UPDATE users SET onlineTime = @time WHERE id=@userId;").run({ time: seconds, userId: player.userId });
+            Storage.query("UPDATE users SET onlineTime = onlineTime + @time WHERE id=@userId;").run({ time: seconds, userId: player.userId });
         }
         console.log(`Player ${player.username} errored out due to ${error.message}`);
         this.notifyLeave(player);
@@ -676,7 +676,7 @@ export class WebchatServer {
     disconnectPlayer(player: WebchatPlayer) {
         if (player.userId !== null) {
             let seconds = Math.floor((new Date().getTime() - player.connectTime.getTime()) / 1000);
-            Storage.query("UPDATE users SET onlineTime = @time WHERE id=@userId;").run({ time: seconds, userId: player.userId });
+            Storage.query("UPDATE users SET onlineTime = onlineTime + @time WHERE id=@userId;").run({ time: seconds, userId: player.userId });
         }
         this.clients.delete(player);
         player.socket.destroy();

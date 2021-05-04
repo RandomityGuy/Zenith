@@ -1013,19 +1013,4 @@ export class PQServer {
         return "ARGUMENT key";
     }
 
-    @route("/")
-    test(req: WebRequest) {
-        Marble.getMarbleList();
-        let obj = {
-            jobject: [{
-                property: "Key",
-                list: [
-                    "Item1"
-                ]
-            }],
-            jobj2: "Test"
-        };
-        return obj;
-    }
-
 }

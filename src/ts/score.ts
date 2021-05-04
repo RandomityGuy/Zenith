@@ -91,7 +91,7 @@ export class Score {
 
     // Gets the leaderboards for a given mission, with the modifiers
     static getGlobalTopScores(missionId: number, modifiers: number = 0) {
-        let scoreData = Storage.query("SELECT gem_count, gems_1_point, gems_2_point, gems_5_point, gems_10_point, user_scores.id, modifiers, users.name, users.username, origin, row_number() OVER (ORDER BY sort) AS placement, rating, score, score_type, timestamp, total_bonus, user_id FROM user_scores, users WHERE mission_id = @missionId AND users.id = user_scores.user_id AND (modifiers & @modifier = @modifier) AND disabled = 0 GROUP BY user_id").all({ missionId: missionId, modifier: modifiers });
+        let scoreData = Storage.query("SELECT gem_count, gems_1_point, gems_2_point, gems_5_point, gems_10_point, user_scores.id, modifiers, users.name, users.username, origin, RANK() OVER (ORDER BY sort) AS placement, rating, score, score_type, timestamp, total_bonus, user_id FROM user_scores, users WHERE mission_id = @missionId AND users.id = user_scores.user_id AND (modifiers & @modifier = @modifier) AND disabled = 0 GROUP BY user_id").all({ missionId: missionId, modifier: modifiers });
         let spcolumnData = [
             { name: "placement", display: "#", type: "place", tab: "1", width: "40" },
             { name: "name", display: "Player", type: "string", tab: "40", width: "-190" },
@@ -128,8 +128,8 @@ export class Score {
         let ddscoredata = this.getGlobalTopScores(missionId, 1 << 2);
         ddscoredata.columns = columnData;
 
-        let eggscoredata = Storage.query("SELECT name, username, time, row_number() OVER (ORDER BY time) AS placement  FROM user_eggs, users WHERE mission_id = @missionId AND users.id = user_eggs.user_id GROUP BY user_id HAVING MIN(time);").all({ missionId: missionId });
-        let laptimesdata = Storage.query("SELECT user_id, name, username, time, row_number() OVER (ORDER BY time) AS placement  FROM user_lap_times, users WHERE mission_id = @missionId AND users.id = user_lap_times.user_id GROUP BY user_id HAVING MIN(time);").all({ missionId: missionId });
+        let eggscoredata = Storage.query("SELECT name, username, time, RANK() OVER (ORDER BY time) AS placement  FROM user_eggs, users WHERE mission_id = @missionId AND users.id = user_eggs.user_id GROUP BY user_id HAVING MIN(time);").all({ missionId: missionId });
+        let laptimesdata = Storage.query("SELECT user_id, name, username, time, RANK() OVER (ORDER BY time) AS placement  FROM user_lap_times, users WHERE mission_id = @missionId AND users.id = user_lap_times.user_id GROUP BY user_id HAVING MIN(time);").all({ missionId: missionId });
         let quota100data = this.getGlobalTopScores(missionId, 1 << 4);
         quota100data.columns = columnData;
         let obj = {
@@ -160,7 +160,7 @@ export class Score {
                 rating: 0
             }
         }
-        let globaltopScore = Storage.query("SELECT row_number() OVER (ORDER BY sort) AS placement, score, sort FROM user_scores, users WHERE mission_id = @missionId AND users.id = user_scores.user_id AND (modifiers & @modifier = @modifier) AND disabled = 0 GROUP BY user_id").get({ missionId: missionId, modifier: 0 });
+        let globaltopScore = Storage.query("SELECT RANK() OVER (ORDER BY sort) AS placement, score, sort FROM user_scores, users WHERE mission_id = @missionId AND users.id = user_scores.user_id AND (modifiers & @modifier = @modifier) AND disabled = 0 GROUP BY user_id").get({ missionId: missionId, modifier: 0 });
         if (globaltopScore === undefined) {
             globaltopScore = {
                 placement: 0,
