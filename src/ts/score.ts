@@ -189,7 +189,7 @@ export class Score {
 
         // Check if its WR
         let isWR = false;
-        if (sort < globaltopScore.sort) {
+        if (sort <= globaltopScore.sort) {
             isWR = true;
         }
 
