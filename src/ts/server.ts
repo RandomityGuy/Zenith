@@ -968,6 +968,53 @@ export class PQServer {
         return ret;
     }
 
+    // Database manipulation
+
+    @route("/", ["GET"])
+    adminPanel(req: WebRequest) {
+        let htmlFile = fs.readFileSync(path.join(__dirname, 'html', 'zenith.html'), 'utf-8');
+        let resp = new WebResponse(htmlFile.toString(), 200, "text/html");
+        return resp;
+    }
+
+    @route("/api/tables", ["GET"])
+    getTableNames(req: WebRequest) {
+        if (!req.searchParams.has("username"))
+            return "ARGUMENT username";
+        if (!req.searchParams.has("key"))
+            return "ARGUMENT key";
+        
+        let authId = Player.authenticateMod(req.searchParams.get("username"), req.searchParams.get("key"));
+        if (authId === null)
+            return "FAILURE";
+        
+        let stmt = Storage.query("SELECT tbl_name FROM sqlite_master WHERE type='table'");
+        let ret = stmt.all().map(x => x.tbl_name);
+        return ret;
+    }
+
+    @route("/api/tables/data", ["GET"])
+    getTableData(req: WebRequest) {
+        if (!req.searchParams.has("username"))
+            return "ARGUMENT username";
+        if (!req.searchParams.has("key"))
+            return "ARGUMENT key";
+        
+        let authId = Player.authenticateMod(req.searchParams.get("username"), req.searchParams.get("key"));
+        if (authId === null)
+            return "FAILURE";
+        
+        let tableName = req.searchParams.get("table")
+        if (tableName == null)
+            return "ARGUMENT tableName";
+        
+        let offset = req.searchParams.has("offset") ? parseInt(req.searchParams.get("offset")) : 0;
+        
+        let stmt = Storage.query(`SELECT * FROM ${tableName} LIMIT 100 OFFSET ${offset}`);
+        let data = stmt.all();
+        return data;
+    }
+
     // Helper function to retrieve mission ids
     getMissionId(req: WebRequest) {
         let hasMissionId = req.searchParams.has("missionId");

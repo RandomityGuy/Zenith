@@ -192,6 +192,16 @@ export class Player {
         return null;
     }
 
+    static authenticateMod(username: string, key: string) {
+        if (this.userExists(username)) {
+            let result = Storage.query(`SELECT id FROM users WHERE username=@username AND webchatKey=@key AND accessLevel IN (1,2,4);`).get({ username: username, key: key });
+            if (result === undefined)
+                return null;
+            return result.id;
+        }
+        return null;
+    }   
+
     // Helper function to authenticate using username password, same thing as above
     static authenticatePwd(username: string, password: string) {
         password = this.deGarbledeguck(password);

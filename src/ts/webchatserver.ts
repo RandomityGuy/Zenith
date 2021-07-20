@@ -51,6 +51,8 @@ class WebchatPlayer {
     // Whether the guy was logging in again
     relogin: boolean = false;
 
+    loggedOut: boolean = false;
+
     constructor(socket: net.Socket) {
         this.socket = socket;
     }
@@ -91,6 +93,7 @@ export class WebchatServer {
         // Stopping
         this.clients.forEach(x => {
             x.socket.destroy();
+            x.loggedOut = true;
         })
         this.server.close();
     }
@@ -650,12 +653,15 @@ export class WebchatServer {
 
     // Notifies everyone a player has left
     notifyLeave(player: WebchatPlayer) {
-        let response = new WebchatResponse();
-        this.generateUserList(response);
-        Storage.log("Zenith-Server",`${player.display} has logged out!`);
+        if (!player.loggedOut) {
+            player.loggedOut = true;
+            let response = new WebchatResponse();
+            this.generateUserList(response);
+            Storage.log("Zenith-Server", `${player.display} has logged out!`);
 
-        response.notify("logout", player.username, player.display, []);
-        this.clients.forEach(x => x.send(response));
+            response.notify("logout", player.username, player.display, []);
+            this.clients.forEach(x => x.send(response));
+        }
     }
 
     // Sends user details to everyone again cause someone updated their data

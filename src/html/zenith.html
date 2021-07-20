@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap');
+		table {
+			width: 100%;
+		  border-collapse: collapse;
+		}
+		td {
+		  border: 1px solid black;
+		}
+
+		td, th {
+			text-align: center
+		}
+		tr:nth-child(2n+3) {background: #eee}
+
+		body {
+			font-family: 'Noto Sans JP', sans-serif;
+			box-sizing: border-box;
+			padding: 0;
+			margin: 0;
+		}
+		button {
+			font-family: 'Noto Sans JP', sans-serif;
+		}
+		.border {
+			border: 2px solid black; background: white; padding: 3px; border-radius: 5px;
+  box-shadow:
+       inset 0 -3em 3em rgba(0,0,0,0.1),
+             0 0  0 2px rgb(255,255,255),
+             0.3em 0.3em 1em rgba(0,0,0,0.3);
+		}
+		.tab {
+			border: 2px solid black; background: #ccc; padding: 3px; border-radius: 5px;
+             border-bottom: 0px solid black;
+    display: inline-block;
+    margin-left: 10px;
+
+
+		}
+		.center {
+			text-align: center;
+		}
+		.bg_cover {
+			background: url(https://marbleblast.com/images/home_slideshow/pqishere.png); background-size: cover; height: 100%; width: 100%; position: absolute;
+		}
+		.bg_cover:before {
+			content: ""; position: absolute;
+			height: 100%; width: 100%; background: #5555;
+		}
+	</style>
+</head>
+<body>
+	<div class="bg_cover">
+		<div class="border" style="position: absolute; top: 40%; left: 25%; width: 50%; min-height: 20%">
+			<div style="text-align: center; font-size: 150%; padding-top: 10px">Login (need Moderator or Administrator account)</div>
+
+		<!--<form>-->
+			<div class="center">
+			  <label for="username">Username:</label>
+			  <input type="text" id="username" name="username"><br>
+			  <label for="password">Password:</label>
+			  <input type="text" id="password" name="password"><br>
+			  <!-- <input type="submit" value="Submit"> -->
+			  <button id="login_button">Login</button>
+			  <div id="login_error_text"></div>
+			<!--</form>-->
+			<!-- Form in html works with php, I know zero php, lol -->
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+<script>
+// http://zenith.vani.ga:20013/Player/CheckLogin.php?user=maingi&password=peepeepoopoo
+
+/*
+none of this shit works lol
+
+async function fetchAsync (url) {
+  let response = await fetch(url);
+  let data = await response.json();
+  return data;
+}
+
+function get_click(event) {
+	document.getElementById("text").textContent = (fetchAsync(`https://zenith.vani.ga:20013/api/Player/CheckLogin.php`))
+	document.getElementById("text2").textContent = (fetchAsync(`https://zenith.vani.ga:20013/api/database`))
+	document.getElementById("text3").textContent = (fetchAsync(`http://localhost:3000/fetch?url=https://zenith.vani.ga:20013/api/database`))
+}*/
+
+document.querySelector('#login_button').addEventListener('click', e => fakeApiLogin());
+
+var playerKey = null;
+var playerUsername = null;
+
+var delay = 1
+function fakeApiCallback (x) {
+	setTimeout(x, delay)
+}
+
+function fakeApiLogin () {
+	// a more knowledgeable person would use two different .php pages or something...
+	let username = document.getElementById("username").value;
+	let password = document.getElementById("password").value;
+	fetch(`/api/Player/CheckLogin.php?username=${username}&password=${password}`).then(resp => resp.json()).then(data => {
+		let success = data.success;
+		if (success) {
+			playerKey = data.key;
+			playerUsername = data.username;
+			getDatabaseTables().then(() => fakeApiShowAdminView());
+		} else {
+			document.getElementById("login_error_text").textContent = "'Invalid' credentials"
+		}
+	});
+
+}
+
+var databaseTables = null;
+
+async function getDatabaseTables() {
+	return fetch(`/api/tables?` + new URLSearchParams({username:playerUsername, key: playerKey})).then(resp => resp.json()).then(data => { 
+		databaseTables = data;
+		selected_pointer[0] = databaseTables[0];
+	})
+}
+
+async function getTableData(tableName) {
+	return fetch(`/api/tables/data?` + new URLSearchParams({username:playerUsername, key: playerKey, table: tableName})).then(resp => resp.json()).then(data => {
+		return data;
+	});
+}
+
+function fakeApiIsAdmin () {
+	return true
+}
+
+var selected_pointer = ["level_scores"]
+function index(obj,i) {return obj[i]}
+
+
+function capitalize(x) {return x.charAt(0).toUpperCase() + x.slice(1);}
+function decorateString (string) {
+	return string.replace(/_/g, " ").split(" ").map(x => capitalize(x)).join(" ")
+}
+
+function fakeApiShowAdminView () {
+	document.body.innerHTML = `
+	<div class="bg_cover">
+
+	<div style="position: absolute; margin: 1%; width: 96%; height: 86%">
+		<div id="tabs"></div>
+		<div class="border">
+			<div id="table"></div>
+			<button id="undo" onclick="get_click()">Undo Changes</button>
+			<button id="confirm" onclick="get_click()">Confirm Changes (send to server)</button>
+		</div>
+	</div>`
+	fakeApiUpdateTabs();
+	getTableData(selected_pointer[0]).then(data => {
+		fakeApiRenderTable(data)});
+	//fakeApiRenderTable(selected_pointer.reduce(index, database));
+}
+function fakeApiGetObject () {
+	return object
+}
+function fakeApiUpdateTabs () {
+	let rv = ""
+	for (let i = 0; i < databaseTables.length; i++) {
+		let style = (selected_pointer[0] == databaseTables[i])? `style="font-weight: bold; background: white"`:""
+		rv += `<div onclick="fakeApiChangeTab('${databaseTables[i]}')" class="tab" ${style}>${decorateString(databaseTables[i])}</div>`
+	}
+	document.getElementById("tabs").innerHTML = rv
+}
+function fakeApiChangeTab(tab) {
+	console.log(`Switching to ${tab}`)
+	selected_pointer[0] = tab
+	fakeApiUpdateTabs();
+	getTableData(selected_pointer[0]).then(data => {
+		fakeApiRenderTable(data)});
+}
+
+function fakeApiRenderTable (table) {
+	let all_keys = Array.from(new Set([].concat(...table.map(x => Object.keys(x)))))
+	let rv = ""
+	for (let i = 0; i < all_keys.length; i++) {
+		rv += `<th>${decorateString(all_keys[i])}</th>`
+	}
+
+	// Admin Tools column
+	rv += `<th>Admin Tools</th>`
+
+	for (let i = 0; i < table.length; i++) {
+		let entry = table[i]
+		rv += `<tr>`
+
+		for (let ii = 0; ii < all_keys.length; ii++) {
+			let text = entry[all_keys[ii]] ?? "" // Replace with nothing if undefined
+			rv += `<td>${text}</td>`
+		}
+
+		// Admin Tools column
+		rv += `<td>Edit Entry`
+		if (selected_pointer[0] == "level_scores") {
+			rv += ` • Download Recording`
+		}
+		rv += `</td>`
+
+		rv += `</tr>`
+	}
+	rv = `<table>${rv}</table>`
+	document.getElementById("table").innerHTML = rv
+}
+function fakeApiAddEntry () {
+	return object
+}
+function fakeApiEditEntry () {
+	return object
+}
+
+/*
+I'm thinking the site be like:
+-login
+--user profile edit
+--if admin, then show list of tables and stuf
+---view the data in the tables and shit
+---run sql queries and shit
+---easy insert/delete shit
+~~~view kicks/bans*/
+</script>
