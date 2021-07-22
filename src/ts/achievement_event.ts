@@ -209,17 +209,17 @@ export class AchievementEvent {
 
         // Achievement..based
         if (!currentAchievements.has(2010)) {
-            if (playerAchievements.every(x => [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009].includes(x))) {
+            if ([2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009].every(x => currentAchievements.has(x))) {
                 Achievement.grantAchievement(userId, 2010);
             }
         }
         if (!currentAchievements.has(2016)) {
-            if (playerAchievements.every(x => [2011, 2012, 2013, 2014, 2015].includes(x))) {
+            if ([2011, 2012, 2013, 2014, 2015].every(x => currentAchievements.has(x))) {
                 Achievement.grantAchievement(userId, 2016);
             }
         }
         if (!currentAchievements.has(2021)) {
-            if (playerAchievements.every(x => [2010, 2016, 2017, 2018, 2019, 2020].includes(x))) {
+            if ([2010, 2016, 2017, 2018, 2019, 2020].every(x => currentAchievements.has(x))) {
                 Achievement.grantAchievement(userId, 2021);
             }
         }
@@ -515,19 +515,19 @@ export class AchievementEvent {
         // Achievement related
 
         if (!currentAchievements.has(3021)) {
-            if (playerAchievements.every(x => [3001, 3004, 3011, 3016, 3017, 3018, 3019].includes(x))) {
+            if ([3001, 3004, 3011, 3016, 3017, 3018, 3019].every(x => currentAchievements.has(x))) {
                 Achievement.grantAchievement(userId, 3021);
             }
         }
 
         if (!currentAchievements.has(3022)) {
-            if (playerAchievements.every(x => [3002, 3003, 3005, 3006, 3007, 3008, 3013, 3014, 3015].includes(x))) {
+            if ([3002, 3003, 3005, 3006, 3007, 3008, 3013, 3014, 3015].every(x => currentAchievements.has(x))) {
                 Achievement.grantAchievement(userId, 3022);
             }
         }
 
         if (!currentAchievements.has(3023)) {
-            if (playerAchievements.every(x => [3021, 3022].includes(x))) {
+            if ([3021, 3022].every(x => currentAchievements.has(x))) {
                 Achievement.grantAchievement(userId, 3023);
             }
         }

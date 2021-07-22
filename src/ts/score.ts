@@ -152,7 +152,7 @@ export class Score {
     }
 
     // Save a score to the leaderboards
-    static recordScore(userId: number, missionId: number, score: number, scoreType: string, modifiers: number, totalBonus: number, gemCount: number, gems1: number, gems2: number, gems5: number, gems10: number) {
+    static recordScore(userId: number, missionId: number, score: number, scoreType: string, modifiers: number, totalBonus: number, gemCount: number, gems1: number, gems2: number, gems5: number, gems10: number, extraModes: string = "") {
         // First get the best score of yours and the top score
         let personalTopScore = Storage.query("SELECT * FROM user_scores WHERE user_id = @userId AND mission_id = @missionId AND user_scores.disabled = 0 ORDER BY sort;").get({ userId: userId, missionId: missionId });
         if (personalTopScore === undefined) {
@@ -211,8 +211,8 @@ export class Score {
 
         // Now finally add our score
 
-        let insertQuery = Storage.query(`INSERT INTO user_scores(user_id,mission_id,score,score_type,total_bonus,rating,gem_count,gems_1_point,gems_2_point,gems_5_point,gems_10_point,modifiers,origin,extra_modes,sort,disabled,timestamp) VALUES (@userId, @missionId, @score, @scoreType, @totalBonus, @rating, @gemCount, @gems1, @gems2, @gems5, @gems10, @modifiers, 'PlatinumQuest', '', @sort, '0', DATETIME('now','localtime'));`);
-        let c = insertQuery.run({ userId: userId, missionId: missionId, score: score, scoreType: scoreType, totalBonus: totalBonus, rating: rating, gemCount: gemCount, gems1: gems1, gems2: gems2, gems5: gems5, gems10: gems10, modifiers: modifiers, sort: sort });
+        let insertQuery = Storage.query(`INSERT INTO user_scores(user_id,mission_id,score,score_type,total_bonus,rating,gem_count,gems_1_point,gems_2_point,gems_5_point,gems_10_point,modifiers,origin,extra_modes,sort,disabled,timestamp) VALUES (@userId, @missionId, @score, @scoreType, @totalBonus, @rating, @gemCount, @gems1, @gems2, @gems5, @gems10, @modifiers, 'PlatinumQuest', @extraModes, @sort, '0', DATETIME('now','localtime'));`);
+        let c = insertQuery.run({ userId: userId, missionId: missionId, score: score, scoreType: scoreType, totalBonus: totalBonus, rating: rating, gemCount: gemCount, gems1: gems1, gems2: gems2, gems5: gems5, gems10: gems10, modifiers: modifiers, sort: sort, extraModes: extraModes });
 
         let success = c.changes > 0;
 

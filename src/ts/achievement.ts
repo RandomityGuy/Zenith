@@ -178,7 +178,7 @@ export class Achievement {
                 JOIN mission_rating_info ON missions.id = mission_rating_info.mission_id
                 WHERE user_id = @userId
                   AND has_egg
-                  AND mission.game_id = 4
+                  AND missions.game_id = 4
                   AND disabled = 0
                   AND normally_hidden = 0
                 GROUP BY user_eggs.mission_id

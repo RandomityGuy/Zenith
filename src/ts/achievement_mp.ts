@@ -421,7 +421,7 @@ export class AchievementMP {
                 horizonWins = horizonWins.wins;
             }
 
-            if (sprawlWins + horizonWins > 0) {
+            if (sprawlWins + horizonWins > 1) {
                 Achievement.grantAchievement(userId, 73);
             }
         }
